@@ -88,7 +88,7 @@ function ScheduleInterviewModal({ isOpen, onClose, job, onScheduled }) {
             }}>
                 {/* Header */}
                 <div className="flex justify-between items-center mb-lg">
-                    <h2 style={{ margin: 0 }}>🎤 Schedule AI Interview</h2>
+                    <h2 style={{ margin: 0 }}>Schedule AI Interview</h2>
                     <button
                         onClick={onClose}
                         style={{
@@ -142,7 +142,7 @@ function ScheduleInterviewModal({ isOpen, onClose, job, onScheduled }) {
                                 fontSize: '1.1rem',
                             }}
                         >
-                            {loading ? 'Starting...' : '🚀 Start Interview Now'}
+                            {loading ? 'Starting...' : 'Start Interview Now'}
                         </button>
 
                         <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', margin: 'var(--spacing-md) 0' }}>
@@ -158,7 +158,7 @@ function ScheduleInterviewModal({ isOpen, onClose, job, onScheduled }) {
                                 padding: 'var(--spacing-lg)',
                             }}
                         >
-                            📅 Schedule for Later
+                            Schedule for Later
                         </button>
                     </>
                 )}
@@ -211,7 +211,7 @@ function ScheduleInterviewModal({ isOpen, onClose, job, onScheduled }) {
                                 marginTop: 'var(--spacing-md)',
                             }}
                         >
-                            {loading ? 'Scheduling...' : '✅ Confirm Schedule'}
+                            {loading ? 'Scheduling...' : 'Confirm Schedule'}
                         </button>
                     </>
                 )}
@@ -220,12 +220,12 @@ function ScheduleInterviewModal({ isOpen, onClose, job, onScheduled }) {
                 <div style={{
                     marginTop: 'var(--spacing-lg)',
                     padding: 'var(--spacing-md)',
-                    background: 'rgba(99, 102, 241, 0.1)',
+                    background: 'rgba(255, 165, 0, 0.1)',
                     borderRadius: 'var(--radius-md)',
                     fontSize: '0.875rem',
                     color: 'var(--color-text-secondary)',
                 }}>
-                    💡 The AI interview takes about 15-20 minutes. You'll be asked questions about your experience and skills.
+                    The AI interview takes about 15-20 minutes. You'll be asked questions about your experience and skills.
                 </div>
             </div>
         </div>

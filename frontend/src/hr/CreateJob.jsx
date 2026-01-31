@@ -303,7 +303,7 @@ function CreateJob() {
                                                 padding: '4px 12px',
                                             }}
                                         >
-                                            {generatingJD ? '✨ Generating...' : '✨ Generate with AI'}
+                                            {generatingJD ? 'Generating...' : 'Generate with AI'}
                                         </button>
                                     </div>
                                     <textarea

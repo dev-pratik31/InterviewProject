@@ -77,7 +77,7 @@ function JobFeed({ showApplications = false }) {
 
                     {applications.length === 0 ? (
                         <div className="card text-center" style={{ padding: 'var(--spacing-2xl)' }}>
-                            <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-md)' }}>📝</div>
+                            <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-md)' }}></div>
                             <h3>No Applications Yet</h3>
                             <p style={{ margin: 'var(--spacing-md) 0' }}>
                                 Start applying to jobs to see your applications here.
@@ -150,7 +150,7 @@ function JobFeed({ showApplications = false }) {
                 {/* Job Cards */}
                 {jobs.length === 0 ? (
                     <div className="card text-center" style={{ padding: 'var(--spacing-2xl)' }}>
-                        <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-md)' }}>🔍</div>
+                        <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-md)' }}></div>
                         <h3>No Jobs Found</h3>
                         <p>Try adjusting your search or check back later for new opportunities.</p>
                     </div>
@@ -168,13 +168,13 @@ function JobFeed({ showApplications = false }) {
 
                                     <div className="job-meta">
                                         <span className="job-meta-item">
-                                            📍 {job.location || 'Not specified'}
+                                            {job.location || 'Not specified'}
                                         </span>
                                         <span className="job-meta-item">
-                                            💼 {job.experience_required}+ years
+                                            {job.experience_required}+ years
                                         </span>
                                         <span className="job-meta-item">
-                                            🏠 {job.remote_type}
+                                            {job.remote_type}
                                         </span>
                                     </div>
 

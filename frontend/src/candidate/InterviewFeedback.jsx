@@ -43,10 +43,10 @@ function InterviewFeedback() {
 
     const getRecommendationLabel = (rec) => {
         switch (rec) {
-            case 'strong_hire': return '🌟 Strong Hire';
-            case 'hire': return '✅ Hire';
-            case 'maybe': return '🤔 Maybe';
-            case 'no_hire': return '❌ No Hire';
+            case 'strong_hire': return 'Strong Hire';
+            case 'hire': return 'Hire';
+            case 'maybe': return 'Maybe';
+            case 'no_hire': return 'No Hire';
             default: return rec;
         }
     };
@@ -152,7 +152,7 @@ function InterviewFeedback() {
                         {feedback.feedback.strengths?.length > 0 && (
                             <div className="card mb-md">
                                 <h3 style={{ marginBottom: 'var(--spacing-md)', color: 'var(--color-success)' }}>
-                                    💪 Strengths
+                                    Strengths
                                 </h3>
                                 <ul style={{ margin: 0, paddingLeft: 'var(--spacing-lg)' }}>
                                     {feedback.feedback.strengths.map((s, i) => (
@@ -166,7 +166,7 @@ function InterviewFeedback() {
                         {feedback.feedback.areas_for_improvement?.length > 0 && (
                             <div className="card mb-md">
                                 <h3 style={{ marginBottom: 'var(--spacing-md)', color: 'var(--color-warning)' }}>
-                                    📈 Areas for Improvement
+                                    Areas for Improvement
                                 </h3>
                                 <ul style={{ margin: 0, paddingLeft: 'var(--spacing-lg)' }}>
                                     {feedback.feedback.areas_for_improvement.map((a, i) => (
@@ -179,7 +179,7 @@ function InterviewFeedback() {
                         {/* Summary */}
                         {feedback.feedback.detailed_summary && (
                             <div className="card mb-lg">
-                                <h3 style={{ marginBottom: 'var(--spacing-md)' }}>📝 Summary</h3>
+                                <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Summary</h3>
                                 <p style={{
                                     margin: 0,
                                     lineHeight: 1.8,

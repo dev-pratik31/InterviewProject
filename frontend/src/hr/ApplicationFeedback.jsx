@@ -45,10 +45,10 @@ function ApplicationFeedback() {
 
     const getRecommendationStyle = (rec) => {
         const styles = {
-            strong_hire: { bg: 'rgba(16, 185, 129, 0.15)', color: '#10b981', label: '🌟 Strong Hire' },
-            hire: { bg: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', label: '✅ Hire' },
-            maybe: { bg: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', label: '🤔 Maybe' },
-            no_hire: { bg: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', label: '❌ No Hire' },
+            strong_hire: { bg: 'rgba(16, 185, 129, 0.15)', color: '#10b981', label: 'Strong Hire' },
+            hire: { bg: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', label: 'Hire' },
+            maybe: { bg: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', label: 'Maybe' },
+            no_hire: { bg: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', label: 'No Hire' },
         };
         return styles[rec] || styles.maybe;
     };
@@ -151,10 +151,10 @@ function ApplicationFeedback() {
                         {/* Scores */}
                         <div className="card mb-lg">
                             <h3>Performance Scores</h3>
-                            {renderScoreBar(scores.confidence || 0.5, '🎯 Confidence')}
-                            {renderScoreBar(scores.technical || 0.5, '💻 Technical')}
-                            {renderScoreBar(scores.clarity || 0.5, '📝 Clarity')}
-                            {renderScoreBar(scores.depth || 0.5, '🔍 Depth')}
+                            {renderScoreBar(scores.confidence || 0.5, 'Confidence')}
+                            {renderScoreBar(scores.technical || 0.5, 'Technical')}
+                            {renderScoreBar(scores.clarity || 0.5, 'Clarity')}
+                            {renderScoreBar(scores.depth || 0.5, 'Depth')}
                         </div>
 
                         {/* Detailed Feedback */}
@@ -163,7 +163,7 @@ function ApplicationFeedback() {
 
                             {feedback.strengths && (
                                 <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                                    <h4 style={{ color: 'var(--color-success)' }}>✅ Strengths</h4>
+                                    <h4 style={{ color: 'var(--color-success)' }}>Strengths</h4>
                                     <ul style={{ paddingLeft: 'var(--spacing-lg)' }}>
                                         {feedback.strengths.map((s, i) => <li key={i}>{s}</li>)}
                                     </ul>
@@ -172,7 +172,7 @@ function ApplicationFeedback() {
 
                             {feedback.areas_for_improvement && (
                                 <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                                    <h4 style={{ color: 'var(--color-warning)' }}>📈 Areas for Improvement</h4>
+                                    <h4 style={{ color: 'var(--color-warning)' }}>Areas for Improvement</h4>
                                     <ul style={{ paddingLeft: 'var(--spacing-lg)' }}>
                                         {feedback.areas_for_improvement.map((a, i) => <li key={i}>{a}</li>)}
                                     </ul>
@@ -205,7 +205,7 @@ function ApplicationFeedback() {
                                         className="btn btn-success"
                                         style={{ width: '100%' }}
                                     >
-                                        ✅ Accept Candidate
+                                        Accept Candidate
                                     </button>
                                     <button
                                         onClick={() => handleDecision('rejected')}
@@ -213,7 +213,7 @@ function ApplicationFeedback() {
                                         className="btn btn-error"
                                         style={{ width: '100%' }}
                                     >
-                                        ❌ Reject Candidate
+                                        Reject Candidate
                                     </button>
                                 </div>
                             ) : (
@@ -229,7 +229,7 @@ function ApplicationFeedback() {
                                         ? 'var(--color-success)'
                                         : 'var(--color-error)',
                                 }}>
-                                    {application.status === 'accepted' ? '✅ Accepted' : '❌ Rejected'}
+                                    {application.status === 'accepted' ? 'Accepted' : 'Rejected'}
                                 </div>
                             )}
                         </div>

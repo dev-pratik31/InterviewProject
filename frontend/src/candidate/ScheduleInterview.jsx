@@ -109,7 +109,7 @@ function ScheduleInterview({ showList = false }) {
 
                     {interviews.length === 0 ? (
                         <div className="card text-center" style={{ padding: 'var(--spacing-2xl)' }}>
-                            <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-md)' }}>📅</div>
+                            <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-md)' }}></div>
                             <h3>No Interviews Scheduled</h3>
                             <p style={{ margin: 'var(--spacing-md) 0' }}>
                                 Your scheduled interviews will appear here.
@@ -163,17 +163,15 @@ function ScheduleInterview({ showList = false }) {
                                         </div>
                                     </div>
 
-                                    {interview.status === 'scheduled' && (
-                                        <div className="mt-md" style={{
-                                            padding: 'var(--spacing-sm)',
-                                            background: 'rgba(99, 102, 241, 0.1)',
-                                            borderRadius: 'var(--radius-sm)',
-                                            fontSize: '0.875rem',
-                                            color: 'var(--color-primary-light)'
-                                        }}>
-                                            ℹ️ Phase 2: AI interviews will be conducted here
-                                        </div>
-                                    )}
+                                    <div className="mt-md" style={{
+                                        padding: 'var(--spacing-sm)',
+                                        background: 'rgba(255, 165, 0, 0.1)',
+                                        borderRadius: 'var(--radius-sm)',
+                                        fontSize: '0.875rem',
+                                        color: 'var(--color-primary-light)'
+                                    }}>
+                                        Phase 2: AI interviews will be conducted here
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -294,7 +292,7 @@ function ScheduleInterview({ showList = false }) {
                     borderColor: 'var(--color-accent)'
                 }}>
                     <h4 style={{ marginBottom: 'var(--spacing-sm)', color: 'var(--color-accent)' }}>
-                        🤖 Coming in Phase 2
+                        Coming in Phase 2
                     </h4>
                     <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}>
                         AI-powered interviews will be conducted at your scheduled time.

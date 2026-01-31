@@ -19,6 +19,7 @@ import CreateJob from './hr/CreateJob';
 import JobList from './hr/JobList';
 import Applications from './hr/Applications';
 import ApplicationFeedback from './hr/ApplicationFeedback';
+import JDGenerator from './hr/JDGenerator';
 
 // Candidate pages
 import JobFeed from './candidate/JobFeed';
@@ -88,6 +89,14 @@ function App() {
                     element={
                         <ProtectedRoute allowedRoles={['hr']}>
                             <CreateJob />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/hr/generate-jd"
+                    element={
+                        <ProtectedRoute allowedRoles={['hr']}>
+                            <JDGenerator />
                         </ProtectedRoute>
                     }
                 />

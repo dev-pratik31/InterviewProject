@@ -191,10 +191,10 @@ function Apply() {
 
                 {/* Tips */}
                 <div className="card mt-lg" style={{
-                    background: 'rgba(99, 102, 241, 0.1)',
+                    background: 'rgba(255, 165, 0, 0.1)',
                     borderColor: 'var(--color-primary)'
                 }}>
-                    <h4 style={{ marginBottom: 'var(--spacing-sm)' }}>💡 Application Tips</h4>
+                    <h4 style={{ marginBottom: 'var(--spacing-sm)' }}>Application Tips</h4>
                     <ul style={{
                         color: 'var(--color-text-secondary)',
                         paddingLeft: 'var(--spacing-lg)',

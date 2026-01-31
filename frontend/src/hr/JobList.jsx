@@ -63,7 +63,7 @@ function JobList() {
 
                 {jobs.length === 0 ? (
                     <div className="card text-center" style={{ padding: 'var(--spacing-2xl)' }}>
-                        <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-md)' }}>📋</div>
+                        <div style={{ fontSize: '3rem', marginBottom: 'var(--spacing-md)' }}></div>
                         <h3>No Jobs Posted Yet</h3>
                         <p style={{ margin: 'var(--spacing-md) 0' }}>
                             Create your first job posting to start receiving applications.

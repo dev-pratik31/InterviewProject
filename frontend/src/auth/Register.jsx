@@ -68,7 +68,7 @@ function Register() {
         <div className="auth-page">
             <div className="auth-card animate-fade-in">
                 <div className="auth-header">
-                    <div className="auth-logo">💼</div>
+                    <div className="auth-logo"></div>
                     <h1 className="auth-title">Create Account</h1>
                     <p className="auth-subtitle">Join our hiring platform</p>
                 </div>
@@ -94,7 +94,7 @@ function Register() {
                                     flex: 1,
                                     padding: 'var(--spacing-md)',
                                     background: formData.role === 'candidate'
-                                        ? 'rgba(99, 102, 241, 0.2)'
+                                        ? 'rgba(255, 165, 0, 0.2)'
                                         : 'var(--color-bg-tertiary)',
                                     border: `1px solid ${formData.role === 'candidate'
                                         ? 'var(--color-primary)'
@@ -113,7 +113,7 @@ function Register() {
                                     onChange={handleChange}
                                     style={{ display: 'none' }}
                                 />
-                                <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>🎯</div>
+                                <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>Find Jobs</div>
                                 <div style={{ fontWeight: 500 }}>Find a Job</div>
                             </label>
 
@@ -123,7 +123,7 @@ function Register() {
                                     flex: 1,
                                     padding: 'var(--spacing-md)',
                                     background: formData.role === 'hr'
-                                        ? 'rgba(99, 102, 241, 0.2)'
+                                        ? 'rgba(255, 165, 0, 0.2)'
                                         : 'var(--color-bg-tertiary)',
                                     border: `1px solid ${formData.role === 'hr'
                                         ? 'var(--color-primary)'
@@ -142,7 +142,7 @@ function Register() {
                                     onChange={handleChange}
                                     style={{ display: 'none' }}
                                 />
-                                <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>🏢</div>
+                                <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>Hire</div>
                                 <div style={{ fontWeight: 500 }}>Hire Talent</div>
                             </label>
                         </div>

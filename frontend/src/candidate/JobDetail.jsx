@@ -103,10 +103,10 @@ function JobDetail() {
 
                     {/* Meta badges */}
                     <div className="flex gap-sm flex-wrap mt-lg">
-                        <span className="badge badge-primary">📍 {job.location || 'Not specified'}</span>
-                        <span className="badge badge-primary">💼 {job.experience_required}+ years</span>
-                        <span className="badge badge-primary">🏠 {job.remote_type}</span>
-                        <span className="badge badge-primary">⏰ {job.employment_type}</span>
+                        <span className="badge badge-primary">{job.location || 'Not specified'}</span>
+                        <span className="badge badge-primary">{job.experience_required}+ years</span>
+                        <span className="badge badge-primary">{job.remote_type}</span>
+                        <span className="badge badge-primary">{job.employment_type}</span>
                     </div>
 
                     {/* Salary */}

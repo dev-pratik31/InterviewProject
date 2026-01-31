@@ -290,7 +290,7 @@ function InterviewRoom() {
                         transition: 'all 0.3s ease',
                         animation: isSpeaking ? 'pulse 1s infinite' : 'none',
                     }}>
-                        🤖
+                        AI
                     </div>
                     <p style={{
                         color: 'var(--color-text-muted)',
@@ -327,7 +327,7 @@ function InterviewRoom() {
                                 color: 'var(--color-text-muted)',
                                 marginBottom: 'var(--spacing-xs)'
                             }}>
-                                {msg.role === 'interviewer' ? '🤖 AI Interviewer' : '👤 You'}
+                                {msg.role === 'interviewer' ? 'AI Interviewer' : 'You'}
                             </div>
                             <div style={{ lineHeight: 1.6 }}>{msg.content}</div>
                         </div>
@@ -367,7 +367,7 @@ function InterviewRoom() {
                                 }}
                                 disabled={isSpeaking || submitting}
                             >
-                                {isListening ? '⏹️' : '🎤'}
+                                {isListening ? 'Stop' : 'Mic'}
                             </button>
 
                             <input

@@ -82,7 +82,7 @@ function Dashboard() {
                         background: 'rgba(245, 158, 11, 0.1)'
                     }}>
                         <div className="flex items-center gap-md">
-                            <span style={{ fontSize: '2rem' }}>🏢</span>
+                            <span style={{ fontSize: '2rem' }}></span>
                             <div style={{ flex: 1 }}>
                                 <h3>Complete Your Profile</h3>
                                 <p style={{ margin: 0 }}>Create your company profile to start posting jobs.</p>
@@ -97,7 +97,7 @@ function Dashboard() {
                 {/* Stats Grid */}
                 <div className="dashboard-grid mb-lg">
                     <div className="stat-card">
-                        <div className="stat-icon">📋</div>
+                        <div className="stat-icon"></div>
                         <div>
                             <div className="stat-value">{stats.totalJobs}</div>
                             <div className="stat-label">Total Jobs</div>
@@ -105,7 +105,7 @@ function Dashboard() {
                     </div>
 
                     <div className="stat-card">
-                        <div className="stat-icon" style={{ background: 'var(--gradient-accent)' }}>🚀</div>
+                        <div className="stat-icon" style={{ background: 'var(--gradient-accent)' }}></div>
                         <div>
                             <div className="stat-value">{stats.publishedJobs}</div>
                             <div className="stat-label">Published</div>
@@ -113,7 +113,7 @@ function Dashboard() {
                     </div>
 
                     <div className="stat-card">
-                        <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>📝</div>
+                        <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}></div>
                         <div>
                             <div className="stat-value">{stats.totalApplications}</div>
                             <div className="stat-label">Applications</div>
@@ -121,7 +121,7 @@ function Dashboard() {
                     </div>
 
                     <div className="stat-card">
-                        <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}>📅</div>
+                        <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}></div>
                         <div>
                             <div className="stat-value">{stats.scheduledInterviews}</div>
                             <div className="stat-label">Interviews</div>
@@ -171,7 +171,7 @@ function Dashboard() {
                                             </td>
                                             <td>
                                                 <span className={`badge ${job.status === 'published' ? 'badge-success' :
-                                                        job.status === 'draft' ? 'badge-warning' : 'badge-error'
+                                                    job.status === 'draft' ? 'badge-warning' : 'badge-error'
                                                     }`}>
                                                     {job.status}
                                                 </span>

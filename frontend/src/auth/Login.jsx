@@ -53,7 +53,7 @@ function Login() {
         <div className="auth-page">
             <div className="auth-card animate-fade-in">
                 <div className="auth-header">
-                    <div className="auth-logo">💼</div>
+                    <div className="auth-logo"></div>
                     <h1 className="auth-title">Welcome Back</h1>
                     <p className="auth-subtitle">Sign in to your account</p>
                 </div>
