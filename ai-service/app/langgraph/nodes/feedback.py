@@ -1,11 +1,12 @@
 """
 Feedback Generation Node
 
-Final node that generates structured interview feedback.
+Final node that generates detailed, signal-based interview feedback.
+Analyzes implicit behavioral, communication, and technical signals.
 """
 
 from datetime import datetime
-from typing import Optional
+from typing import List, Literal
 
 from pydantic import BaseModel, Field
 
@@ -13,148 +14,209 @@ from app.langgraph.state import InterviewState, calculate_average
 from app.llm import get_provider
 
 
-class InterviewFeedback(BaseModel):
-    """Structured feedback output."""
-    
-    # Scores (0-10)
-    overall_score: float = Field(..., ge=0, le=10)
-    technical_score: float = Field(..., ge=0, le=10)
-    communication_score: float = Field(..., ge=0, le=10)
-    problem_solving_score: float = Field(..., ge=0, le=10)
-    confidence_score: float = Field(..., ge=0, le=10)
-    
-    # Qualitative
-    strengths: list[str] = Field(..., min_length=1, max_length=5)
-    areas_for_improvement: list[str] = Field(..., min_length=1, max_length=5)
-    
-    # Recommendation
-    recommendation: str = Field(..., pattern="^(strong_hire|hire|maybe|no_hire)$")
-    recommendation_rationale: str
-    
-    # Summary
-    detailed_summary: str
+class BehavioralFeedback(BaseModel):
+    """
+    Structured feedback report based on behavioral signal analysis.
+    Designed for recruiters to assess candidate fit beyond simple scores.
+    """
+
+    # 1. Overall Interview Summary
+    overall_summary: str = Field(
+        ...,
+        description="High-level assessment of the interview interaction and candidate performance.",
+    )
+
+    # 2. Communication & Expression Signals
+    communication_signals: List[str] = Field(
+        ..., description="Observations on clarity, structure, articulation, and pacing."
+    )
+
+    # 3. Confidence & Behavioral Patterns
+    confidence_signals: List[str] = Field(
+        ...,
+        description="Analysis of confidence evolution, hesitation markers, and assertiveness.",
+    )
+
+    # 4. Technical Reasoning Signals
+    technical_signals: List[str] = Field(
+        ...,
+        description="Observations on depth of thought, logical structuring, and edge case awareness.",
+    )
+
+    # 5. Learning & Adaptability Signals
+    adaptability_signals: List[str] = Field(
+        ...,
+        description="Analysis of how the candidate responds to hints, feedback, or increasing difficulty.",
+    )
+
+    # 6. Observed Strengths
+    strengths: List[str] = Field(
+        ...,
+        description="Key strengths derived strictly from observed behavior and responses.",
+    )
+
+    # 7. Improvement Opportunities
+    opportunities: List[str] = Field(
+        ...,
+        description="Constructive, actionable insights for candidate growth or areas of concern.",
+    )
+
+    # 8. Role Alignment Assessment
+    role_alignment: str = Field(
+        ...,
+        description="Assessment of how valid the candidate's skills and behaviors are for the specific role context.",
+    )
+
+    # 9. Final Recommendation (Non-Numeric)
+    recommendation: Literal[
+        "Strong Fit", "Potential Fit", "Needs Further Evaluation", "Not a Fit Currently"
+    ] = Field(
+        ...,
+        description="Final categorical recommendation based on all observed signals.",
+    )
 
 
-FEEDBACK_PROMPT = """You are an expert technical interviewer generating structured feedback.
+FEEDBACK_PROMPT = """You are an expert Talent Intelligence Analyst.
+Your role is to analyze an interview transcript and generate a "Behavioral Signal–Based Feedback Report" for a recruiter.
 
-Analyze the interview transcript and provide objective, fair feedback.
+## CORE OBJECTIVE
+Replace simple score-based evaluations with deep, implicit signal analysis.
+Focus on HOW the candidate communicates, thinks, and adapts, not just WHAT they say.
 
-IMPORTANT GUIDELINES:
-- Base scores ONLY on demonstrated knowledge and communication
-- Do NOT make assumptions about the candidate
-- Focus on specific examples from the interview
-- Be constructive in areas for improvement
-- Recommendation must be justified by concrete evidence
+## INPUT DATA
+You will be provided with:
+1. Job Context (Role, Company, Skills)
+2. Performance Metrics (Aggregated signals like confidence trends, technical averages)
+3. Full Interview Transcript
 
-Scoring scale (0-10):
-- 0-3: Below expectations, significant gaps
-- 4-5: Meets minimum requirements, room for growth
-- 6-7: Solid performance, meets expectations
-- 8-9: Strong performance, exceeds expectations  
-- 10: Exceptional, outstanding demonstration
+## ANALYSIS DIMENSIONS (Implicit Signals)
+Look for these specific markers in the transcript:
 
-Output strictly valid JSON matching the schema."""
+1. **Communication Signals**:
+   - STRUCTURAL: Do they use "First, then, finally" structures? (High clarity)
+   - QUALIFIERS: Do they overuse "I guess", "maybe"? (Low certainty) vs "In my experience..." (High authority)
+   - PACING: Do they ramble or get straight to the point?
+
+2. **Confidence Patterns**:
+   - EVOLUTION: Did they start nervous and warm up? Or crumble under pressure?
+   - RECOVERY: How did they handle not knowing an answer? (Honesty vs. Bluffing)
+
+3. **Technical Reasoning**:
+   - DEPTH: Do they explain existing solutions or invent new ones?
+   - BREADTH: Do they mention trade-offs, edge cases, and alternative approaches?
+
+4. **Adaptability**:
+   - ATTENTION: Do they incorporate information from previous questions?
+   - OPENNESS: How do they react to challenging follow-ups?
+
+## OUTPUT GUIDELINES
+- **Tone**: Professional, objective, insightful, clinical but human.
+- **Forbidden**: DO NOT output numeric scores (e.g., "8/10").
+- **Evidence**: Back up claims with observations (e.g., "Candidate demonstrated strong adaptability when...")
+
+GENERATE THE REPORT AS VALID JSON MATCHING THE SCHEMA.
+"""
 
 
 async def feedback_node(state: InterviewState) -> dict:
     """
-    Generate comprehensive interview feedback.
-    
+    Generate comprehensive interview feedback using behavioral signal analysis.
+
     Actions:
     1. Compile interview transcript
-    2. Calculate aggregate scores
+    2. Aggregate implicit signals
     3. Generate structured feedback using LLM
-    4. Determine hire recommendation
-    
+
     Returns:
         State updates with final feedback
     """
     llm = get_provider()
-    
+
     # Compile transcript
     transcript = []
     for msg in state["messages"]:
-        role = "Interviewer" if msg["role"] == "assistant" else "Candidate"
-        transcript.append(f"{role}: {msg['content']}")
-    
+        # Handle both dict and LangChain message objects
+        role = "Interviewer"
+        content = ""
+
+        if hasattr(msg, "type"):
+            role = "Interviewer" if msg.type == "ai" else "Candidate"
+            content = msg.content
+        elif isinstance(msg, dict):
+            role = "Interviewer" if msg.get("role") == "assistant" else "Candidate"
+            content = msg.get("content", "")
+
+        transcript.append(f"{role}: {content}")
+
     transcript_text = "\n\n".join(transcript)
-    
-    # Calculate scores
+
+    # Calculate aggregate metrics for context (internal use only)
     avg_confidence = calculate_average(state["confidence_scores"])
     avg_clarity = calculate_average(state["clarity_scores"])
     avg_technical = calculate_average(state["technical_scores"])
     avg_depth = calculate_average(state["depth_scores"])
-    
-    # Generate feedback
+
+    # Prepare prompt
     messages = [
         {"role": "system", "content": FEEDBACK_PROMPT},
-        {"role": "user", "content": f"""
-## Interview Context
-Job Title: {state["job_context"]["title"]}
-Company: {state["job_context"]["company_name"]}
-Required Skills: {', '.join(state["job_context"].get("skills_required", []))}
-Experience Required: {state["job_context"].get("experience_required", 0)}+ years
+        {
+            "role": "user",
+            "content": f"""
+## 1. Job Context
+- Role: {state["job_context"]["title"]}
+- Company: {state["job_context"].get("company_name", "Company")}
+- Required Skills: {", ".join(state["job_context"].get("skills_required", []))}
+- Experience: {state["job_context"].get("experience_required", 0)}+ years
 
-## Performance Metrics
-- Questions Asked: {state["questions_asked"]}
-- Technical Average: {avg_technical:.2f}
-- Confidence Average: {avg_confidence:.2f}
-- Clarity Average: {avg_clarity:.2f}
-- Depth Average: {avg_depth:.2f}
-- Confidence Trend: {state["confidence_trend"]}
-- Struggle Count: {state["struggle_count"]}
+## 2. Derived behavioral signals (Internal Telemetry)
+- Technical Depth Indicator: {avg_technical:.2f} (0-1 range)
+- Communication Clarity: {avg_clarity:.2f}
+- Confidence Trend: {state["confidence_trend"]} (e.g., rising, falling, stable)
+- Struggle Markers: {state["struggle_count"]} instances detected
 - Fatigue Detected: {state["fatigue_detected"]}
 
-## Interview Transcript
+## 3. Interview Transcript
 {transcript_text}
 
-## Task
-Generate structured feedback following the schema exactly.
-All scores should be on a 0-10 scale.
-Provide specific examples to justify your assessment.
-"""} 
+## TASK
+Analyze the implicit signals in the transcript and generate the detailed Behavioral Signal–Based Feedback Report.
+""",
+        },
     ]
-    
+
     try:
         feedback = await llm.generate_structured(
             messages=messages,
-            response_model=InterviewFeedback,
-            temperature=0.3,
+            response_model=BehavioralFeedback,
+            temperature=0.4,  # Slightly higher temperature for more nuance/creativity in analysis
         )
-        
+
         feedback_dict = feedback.model_dump()
-        
+
     except Exception as e:
-        # Fallback to manual calculation
-        overall = (avg_technical * 0.4 + avg_clarity * 0.3 + avg_confidence * 0.3) * 10
-        
-        # Determine recommendation based on scores
-        if overall >= 7.5:
-            recommendation = "strong_hire"
-        elif overall >= 6.0:
-            recommendation = "hire"
-        elif overall >= 4.5:
-            recommendation = "maybe"
-        else:
-            recommendation = "no_hire"
-        
+        print(f"Feedback generation failed: {e}")
+        import traceback
+
+        traceback.print_exc()
+
+        # Fallback to basic manual report
         feedback_dict = {
-            "overall_score": round(overall, 1),
-            "technical_score": round(avg_technical * 10, 1),
-            "communication_score": round(avg_clarity * 10, 1),
-            "problem_solving_score": round(avg_depth * 10, 1),
-            "confidence_score": round(avg_confidence * 10, 1),
-            "strengths": ["Completed the interview"],
-            "areas_for_improvement": ["Could not generate detailed feedback"],
-            "recommendation": recommendation,
-            "recommendation_rationale": f"Based on aggregate scores: {overall:.1f}/10",
-            "detailed_summary": f"Interview completed with {state['questions_asked']} questions. "
-                               f"Technical: {avg_technical:.2f}, Clarity: {avg_clarity:.2f}",
+            "overall_summary": "Interview completed, but detailed AI analysis failed.",
+            "communication_signals": ["Unable to analyze."],
+            "confidence_signals": ["Unable to analyze."],
+            "technical_signals": ["Unable to analyze."],
+            "adaptability_signals": ["Unable to analyze."],
+            "strengths": ["Candidate completed the session."],
+            "opportunities": ["Review transcript manually."],
+            "role_alignment": "Unknown",
+            "recommendation": "Needs Further Evaluation",
         }
-    
+
     return {
         "current_stage": "complete",
         "final_feedback": feedback_dict,
-        "recommendation": feedback_dict["recommendation"],
+        "recommendation": feedback_dict[
+            "recommendation"
+        ],  # Top-level key for easy access
         "pending_response": False,
     }

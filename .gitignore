@@ -1,1 +1,5 @@
 .env 
+.mp3
+*.mp3
+node_modules/
+frontend/node_modules/
