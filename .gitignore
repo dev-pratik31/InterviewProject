@@ -3,3 +3,5 @@
 *.mp3
 node_modules/
 frontend/node_modules/
+ai-service/app/langgraph/nodes/__pycache__/feedback.cpython-311.pyc
+ai-service/app/langgraph/nodes/__pycache__/feedback.cpython-311.pyc
