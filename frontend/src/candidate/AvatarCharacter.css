@@ -1,0 +1,202 @@
+/**
+ * AvatarCharacter Styles
+ * 
+ * Animations for idle (breathing/blinking), speaking, and listening states.
+ */
+
+.avatar-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.avatar-svg {
+    width: 180px;
+    height: 180px;
+    transition: transform 0.3s ease;
+}
+
+/* ========================================
+   IDLE STATE - Subtle breathing & blinking
+   ======================================== */
+
+.avatar-idle .avatar-svg {
+    animation: float 3s ease-in-out infinite;
+}
+
+.avatar-idle .eye-white {
+    animation: blink 4s ease-in-out infinite;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+@keyframes blink {
+
+    0%,
+    45%,
+    55%,
+    100% {
+        transform: scaleY(1);
+    }
+
+    50% {
+        transform: scaleY(0.1);
+    }
+}
+
+/* ========================================
+   SPEAKING STATE - Active mouth movement
+   ======================================== */
+
+.avatar-speaking .avatar-svg {
+    animation: speakBounce 0.3s ease-in-out infinite alternate;
+}
+
+.avatar-speaking .mouth {
+    transition: ry 0.05s ease-out;
+}
+
+.avatar-speaking .eyebrow {
+    animation: eyebrowRaise 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes speakBounce {
+    0% {
+        transform: scale(1);
+    }
+
+    100% {
+        transform: scale(1.02);
+    }
+}
+
+@keyframes eyebrowRaise {
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(-2px);
+    }
+}
+
+/* ========================================
+   LISTENING STATE - Head tilt & pulse
+   ======================================== */
+
+.avatar-listening .avatar-svg {
+    animation: nod 2s ease-in-out infinite;
+}
+
+.avatar-listening .pupil {
+    animation: lookAround 3s ease-in-out infinite;
+}
+
+@keyframes nod {
+
+    0%,
+    100% {
+        transform: rotate(0deg);
+    }
+
+    25% {
+        transform: rotate(3deg);
+    }
+
+    75% {
+        transform: rotate(-3deg);
+    }
+}
+
+@keyframes lookAround {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    33% {
+        transform: translateX(2px);
+    }
+
+    66% {
+        transform: translateX(-2px);
+    }
+}
+
+/* ========================================
+   NAME & STATUS LABELS
+   ======================================== */
+
+.avatar-name {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.avatar-name-text {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: white;
+}
+
+.avatar-role {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.avatar-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    font-size: 0.875rem;
+    color: white;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.avatar-status-speaking,
+.avatar-status-listening {
+    opacity: 1;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    animation: pulse 1s ease-in-out infinite;
+}
+
+.status-dot.listening {
+    background: #f59e0b;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+    }
+}

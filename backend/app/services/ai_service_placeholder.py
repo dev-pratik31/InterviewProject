@@ -15,11 +15,11 @@ AI_SERVICE_URL = "http://localhost:8001"
 
 class AIServiceClient:
     """Client for AI service API calls."""
-    
+
     def __init__(self):
         self.base_url = AI_SERVICE_URL
         self.timeout = httpx.Timeout(60.0)  # AI calls can be slow
-    
+
     async def generate_job_description(
         self,
         job_title: str,
@@ -38,11 +38,11 @@ class AIServiceClient:
                     "industry": industry,
                     "tech_stack": tech_stack,
                     "company_name": company_name,
-                }
+                },
             )
             response.raise_for_status()
             return response.json()
-    
+
     async def start_interview(
         self,
         job_id: str,
@@ -57,11 +57,11 @@ class AIServiceClient:
                     "job_id": job_id,
                     "candidate_id": candidate_id,
                     "candidate_name": candidate_name,
-                }
+                },
             )
             response.raise_for_status()
             return response.json()
-    
+
     async def submit_response(
         self,
         interview_id: str,
@@ -74,11 +74,11 @@ class AIServiceClient:
                 json={
                     "interview_id": interview_id,
                     "response": response_text,
-                }
+                },
             )
             response.raise_for_status()
             return response.json()
-    
+
     async def get_interview_state(self, interview_id: str) -> dict:
         """Get current interview state."""
         async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -87,7 +87,7 @@ class AIServiceClient:
             )
             response.raise_for_status()
             return response.json()
-    
+
     async def complete_interview(self, interview_id: str) -> dict:
         """Complete interview and get feedback."""
         async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -96,7 +96,7 @@ class AIServiceClient:
             )
             response.raise_for_status()
             return response.json()
-    
+
     async def health_check(self) -> bool:
         """Check if AI service is available."""
         try:
@@ -105,6 +105,49 @@ class AIServiceClient:
                 return response.status_code == 200
         except Exception:
             return False
+
+    async def start_interview_with_audio(
+        self,
+        job_id: str,
+        candidate_id: str,
+        candidate_name: Optional[str] = None,
+    ) -> dict:
+        """Start AI interview session with TTS audio."""
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            response = await client.post(
+                f"{self.base_url}/ai/interview/start-with-audio",
+                json={
+                    "job_id": job_id,
+                    "candidate_id": candidate_id,
+                    "candidate_name": candidate_name,
+                },
+            )
+            response.raise_for_status()
+            return response.json()
+
+    async def submit_audio_response(
+        self, interview_id: str, audio_data: bytes, filename: str
+    ) -> dict:
+        """Submit audio for transcription and get next question."""
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            # Create multipart form data
+            files = {"audio": (filename, audio_data, "audio/webm")}
+
+            response = await client.post(
+                f"{self.base_url}/ai/interview/{interview_id}/submit-audio", files=files
+            )
+            try:
+                response.raise_for_status()
+            except httpx.HTTPStatusError:
+                # Include response detail in error message
+                try:
+                    detail = response.json().get("detail", response.text)
+                except Exception:
+                    detail = response.text
+                raise Exception(
+                    f"Client error '{response.status_code}' from AI service: {detail}"
+                )
+            return response.json()
 
 
 # Singleton

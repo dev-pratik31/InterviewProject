@@ -112,11 +112,42 @@ export const aiAPI = {
     // JD Generation
     generateJD: (data) => apiClient.post('/ai/generate-jd', data),
 
-    // Interview
+    // Interview - Text based
     startInterview: (data) => apiClient.post('/ai/interview/start', data),
     submitResponse: (data) => apiClient.post('/ai/interview/respond', data),
     getInterviewState: (id) => apiClient.get(`/ai/interview/${id}/state`),
     completeInterview: (id) => apiClient.post(`/ai/interview/${id}/complete`),
+
+    // Interview - Audio based
+    startInterviewWithAudio: (data) => apiClient.post('/ai/interview/start-with-audio', data),
+    submitAudioResponse: (interviewId, audioBlob) => {
+        // DEBUG: Log blob details
+        console.log('=== DEBUG submitAudioResponse ===');
+        console.log('Blob size:', audioBlob.size);
+        console.log('Blob type:', audioBlob.type);
+
+        // Read first few bytes to verify it's valid WebM
+        const reader = new FileReader();
+        reader.onload = () => {
+            const arr = new Uint8Array(reader.result);
+            console.log('First 10 bytes:', Array.from(arr.slice(0, 10)).map(b => b.toString(16).padStart(2, '0')).join(' '));
+            // Valid WebM starts with: 1a 45 df a3
+        };
+        reader.readAsArrayBuffer(audioBlob.slice(0, 10));
+
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'recording.webm');
+        return apiClient.post(`/ai/interview/${interviewId}/submit-audio`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+    },
+    transcribeAudio: (audioBlob) => {
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'recording.webm');
+        return apiClient.post('/ai/interview/transcribe', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+    },
 
     // Health
     healthCheck: () => apiClient.get('/ai/health'),

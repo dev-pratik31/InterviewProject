@@ -5,13 +5,20 @@ FastAPI entry point for the AI interview service.
 """
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.api import jd_router, interview_router
 from app.vectorstore import get_qdrant_manager
+
+
+# Ensure audio output directory exists
+AUDIO_DIR = Path("./audio_output")
+AUDIO_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @asynccontextmanager
@@ -82,15 +89,19 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["*"],  # Allow all for development
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Include routers
 app.include_router(jd_router)
 app.include_router(interview_router)
+
+# Mount static files for audio serving
+app.mount("/audio", StaticFiles(directory=str(AUDIO_DIR)), name="audio")
 
 
 @app.get("/")
@@ -116,3 +127,27 @@ async def health_check():
             "llm": "configured" if settings.openai_api_key else "not_configured",
         },
     }
+
+
+@app.get("/tts/test")
+async def test_tts(text: str = "Hello, I am Aria, your AI interviewer."):
+    """Test TTS synthesis."""
+    try:
+        from app.tts import generate_speech
+        
+        print(f"Testing TTS with text: {text}")
+        result = await generate_speech(text, session_id="test")
+        print(f"TTS result: {result}")
+        
+        return {
+            "tts_available": True,
+            **result
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {
+            "tts_available": False,
+            "error": str(e),
+        }
+

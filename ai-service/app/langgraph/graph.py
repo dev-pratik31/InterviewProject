@@ -29,7 +29,9 @@ def should_advance_from_warmup(state: InterviewState) -> Literal["technical", "w
     - clarity >= 0.6
     - At least 2 questions asked
     """
+    print(f"DEBUG: Warmup check - Confidence: {state.get('avg_confidence')}, Questions: {state.get('questions_in_stage')}")
     if state["should_advance"]:
+        print("DEBUG: Force advance from warmup")
         return "technical"
     
     if (
@@ -37,12 +39,15 @@ def should_advance_from_warmup(state: InterviewState) -> Literal["technical", "w
         state["avg_clarity"] >= settings.clarity_threshold_advance and
         state["questions_in_stage"] >= 2
     ):
+        print("DEBUG: Advancing to technical (criteria met)")
         return "technical"
     
     # Check if max questions reached
     if state["questions_in_stage"] >= state["max_questions_per_stage"]:
+        print("DEBUG: Advancing to technical (max questions)")
         return "technical"
     
+    print("DEBUG: Staying in warmup")
     return "warmup"
 
 
@@ -59,12 +64,16 @@ def should_advance_from_technical(state: InterviewState) -> Literal["deep_dive",
     - max questions reached
     - struggle count >= 3
     """
+    print(f"DEBUG: Technical check - Score: {state.get('avg_technical')}, Questions: {state.get('questions_in_stage')}")
     if state["fatigue_detected"] or state["struggle_count"] >= 3:
+        print("DEBUG: Ending technical (fatigue/struggle)")
         return "wrapup"
     
     if state["questions_in_stage"] >= state["max_questions_per_stage"]:
         if state["avg_technical"] >= settings.technical_threshold_deep_dive:
+            print("DEBUG: Advancing to deep_dive (score high)")
             return "deep_dive"
+        print("DEBUG: Advancing to wrapup (max questions)")
         return "wrapup"
     
     if (
@@ -72,8 +81,10 @@ def should_advance_from_technical(state: InterviewState) -> Literal["deep_dive",
         state["confidence_trend"] in ["improving", "stable"] and
         state["questions_in_stage"] >= 3
     ):
+        print("DEBUG: Advancing to deep_dive (early)")
         return "deep_dive"
     
+    print("DEBUG: Staying in technical")
     return "technical"
 
 
@@ -185,6 +196,46 @@ def build_interview_graph() -> StateGraph:
     return graph
 
 
+from langgraph.checkpoint.memory import MemorySaver
+
+
+import inspect
+
+import inspect
+import sys
+
+class AsyncMemorySaver(MemorySaver):
+    async def aget(self, config):
+        try:
+            with open("saver.log", "a") as f:
+                f.write(f"aget call: {config}\n")
+            
+            res = super().aget(config)
+            if inspect.isawaitable(res):
+                res = await res
+            
+            with open("saver.log", "a") as f:
+                f.write(f"aget result type: {type(res)}\n")
+            return res
+        except Exception as e:
+            with open("saver.log", "a") as f:
+                f.write(f"aget ERROR: {e}\n")
+            raise
+
+    async def aput(self, *args, **kwargs):
+        try:
+            with open("saver.log", "a") as f:
+                f.write(f"aput call\n")
+            
+            res = super().aput(*args, **kwargs)
+            if inspect.isawaitable(res):
+                return await res
+            return res
+        except Exception as e:
+            with open("saver.log", "a") as f:
+                f.write(f"aput ERROR: {e}\n")
+            raise
+
 def compile_interview_graph():
     """
     Compile the interview graph for execution.
@@ -193,7 +244,27 @@ def compile_interview_graph():
         Compiled graph ready for invocation
     """
     graph = build_interview_graph()
-    return graph.compile()
+    memory = AsyncMemorySaver()
+    # Interrupt after each stage node to allow for user interaction
+    return graph.compile(
+        checkpointer=memory,
+        interrupt_after=["warmup", "technical", "deep_dive", "wrapup", "load_context"]
+    )
+
+def compile_interview_graph():
+    """
+    Compile the interview graph for execution.
+    
+    Returns:
+        Compiled graph ready for invocation
+    """
+    graph = build_interview_graph()
+    memory = AsyncMemorySaver()
+    # Interrupt after each stage node to allow for user interaction
+    return graph.compile(
+        checkpointer=memory,
+        interrupt_after=["warmup", "technical", "deep_dive", "wrapup", "load_context"]
+    )
 
 
 # Compiled graph singleton

@@ -28,6 +28,7 @@ import Apply from './candidate/Apply';
 import ScheduleInterview from './candidate/ScheduleInterview';
 import InterviewRoom from './candidate/InterviewRoom';
 import InterviewFeedback from './candidate/InterviewFeedback';
+import VideoCallInterview from './candidate/VideoCallInterview';
 
 function App() {
     const { isAuthenticated, isHR, isCandidate, loading } = useAuth();
@@ -66,6 +67,9 @@ function App() {
                         isAuthenticated ? <Navigate to={getHomeRedirect()} replace /> : <Register />
                     }
                 />
+
+                {/* Demo route for testing video call interview (no auth required) */}
+                <Route path="/demo/interview" element={<VideoCallInterview />} />
 
                 {/* HR routes */}
                 <Route
@@ -170,7 +174,7 @@ function App() {
                     path="/interview/start/:jobId"
                     element={
                         <ProtectedRoute allowedRoles={['candidate']}>
-                            <InterviewRoom />
+                            <VideoCallInterview />
                         </ProtectedRoute>
                     }
                 />
@@ -178,7 +182,7 @@ function App() {
                     path="/interview/:interviewId"
                     element={
                         <ProtectedRoute allowedRoles={['candidate']}>
-                            <InterviewRoom />
+                            <VideoCallInterview />
                         </ProtectedRoute>
                     }
                 />
@@ -187,6 +191,14 @@ function App() {
                     element={
                         <ProtectedRoute allowedRoles={['candidate']}>
                             <InterviewFeedback />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/interview/:id/call"
+                    element={
+                        <ProtectedRoute allowedRoles={['candidate']}>
+                            <VideoCallInterview />
                         </ProtectedRoute>
                     }
                 />

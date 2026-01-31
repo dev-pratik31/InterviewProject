@@ -1,37 +1,68 @@
 """
-Deep Dive Interview Node
+Deep Dive Node
 
-Advanced technical probing for high-performing candidates.
-Tests depth of understanding and problem-solving approach.
+Advanced technical exploration for strong candidates.
+Tests depth of knowledge and system design thinking.
 """
 
 from datetime import datetime
 
+from langchain_core.messages import AIMessage, HumanMessage
+
 from app.langgraph.state import InterviewState, calculate_trend, calculate_average
 from app.evaluation.scoring import evaluate_response
 from app.llm import get_provider
-from app.utils.prompts import DEEP_DIVE_QUESTION_PROMPT
 from app.config import settings
+
+
+def get_message_content(message) -> str:
+    """Extract content from either a dict or LangChain message object."""
+    if hasattr(message, "content"):
+        return message.content
+    elif isinstance(message, dict):
+        return message.get("content", "")
+    return str(message)
+
+
+def is_assistant_message(message) -> bool:
+    """Check if message is from assistant/AI."""
+    if hasattr(message, "type"):
+        return message.type == "ai"
+    elif isinstance(message, dict):
+        return message.get("role") == "assistant"
+    return False
+
+
+DEEP_DIVE_PROMPT = """You are an expert technical interviewer conducting a deep dive assessment.
+Generate challenging questions that explore:
+- System design and architecture decisions
+- Trade-offs and scalability considerations
+- Real-world problem solving
+- Advanced concepts in their domain
+
+The candidate has shown strong technical skills and is ready for advanced questions."""
 
 
 async def deep_dive_node(state: InterviewState) -> dict:
     """
-    Deep dive phase for advanced candidates.
-    
+    Deep dive phase for strong candidates.
+
     Actions:
-    1. Generate challenging scenario-based questions
-    2. Probe deeper into previous answers
-    3. Test system design and architecture thinking
-    
+    1. Evaluate depth and insight of responses
+    2. Ask follow-up questions on interesting points
+    3. Explore system design and architecture
+    4. Assess problem-solving approach
+
     Returns:
         State updates
     """
     updates = {}
-    
+
+    # Check if we're waiting for candidate response
     if state["pending_response"]:
         return {}
-    
-    # Evaluate response
+
+    # Evaluate response if present
     if state["last_response"]:
         evaluation = await evaluate_response(
             response=state["last_response"],
@@ -39,106 +70,102 @@ async def deep_dive_node(state: InterviewState) -> dict:
             stage="deep_dive",
             job_context=state["job_context"],
         )
-        
-        # Update scores
+
+        # Update score lists
         confidence_scores = state["confidence_scores"] + [evaluation["confidence"]]
         clarity_scores = state["clarity_scores"] + [evaluation["clarity"]]
         technical_scores = state["technical_scores"] + [evaluation["technical"]]
         depth_scores = state["depth_scores"] + [evaluation["depth"]]
-        
+
+        # Calculate aggregates
         avg_confidence = calculate_average(confidence_scores)
         avg_clarity = calculate_average(clarity_scores)
         avg_technical = calculate_average(technical_scores)
+        avg_depth = calculate_average(depth_scores)
         confidence_trend = calculate_trend(confidence_scores)
-        
-        # Track struggle
+
+        # Check for struggle in deep dive
         struggle_count = state["struggle_count"]
-        if evaluation["depth"] < 0.5 and evaluation["technical"] < 0.5:
+        if evaluation["depth"] < 0.4:
             struggle_count += 1
         else:
             struggle_count = 0
-        
-        # Fatigue detection
+
+        # Detect fatigue
         fatigue_detected = (
-            confidence_trend == "declining" and
-            state["questions_asked"] >= 10
+            confidence_trend == "declining" and state["questions_asked"] >= 10
         )
-        
-        updates.update({
-            "confidence_scores": confidence_scores,
-            "clarity_scores": clarity_scores,
-            "technical_scores": technical_scores,
-            "depth_scores": depth_scores,
-            "avg_confidence": avg_confidence,
-            "avg_clarity": avg_clarity,
-            "avg_technical": avg_technical,
-            "confidence_trend": confidence_trend,
-            "struggle_count": struggle_count,
-            "fatigue_detected": fatigue_detected,
-        })
-    
+
+        updates.update(
+            {
+                "confidence_scores": confidence_scores,
+                "clarity_scores": clarity_scores,
+                "technical_scores": technical_scores,
+                "depth_scores": depth_scores,
+                "avg_confidence": avg_confidence,
+                "avg_clarity": avg_clarity,
+                "avg_technical": avg_technical,
+                "avg_depth": avg_depth,
+                "confidence_trend": confidence_trend,
+                "struggle_count": struggle_count,
+                "fatigue_detected": fatigue_detected,
+            }
+        )
+
     # Check exit conditions
     if (
-        updates.get("fatigue_detected") or
-        updates.get("struggle_count", 0) >= 2 or
-        state["questions_in_stage"] >= state["max_questions_per_stage"] or
-        state["questions_asked"] >= state["max_total_questions"]
+        updates.get("fatigue_detected")
+        or updates.get("struggle_count", 0) >= 2
+        or state["questions_in_stage"] >= state["max_questions_per_stage"]
+        or state["questions_asked"] >= state["max_total_questions"]
     ):
         return {
             **updates,
             "questions_in_stage": 0,
         }
-    
-    # Generate deep dive question
+
+    # Generate next deep dive question
     llm = get_provider()
-    
-    # Get best responses for follow-up
-    best_technical_idx = -1
-    if state["technical_scores"]:
-        best_technical_idx = state["technical_scores"].index(max(state["technical_scores"]))
-    
-    # Find the corresponding response
-    candidate_responses = [m for m in state["messages"] if m["role"] == "candidate"]
-    best_response = ""
-    if candidate_responses and best_technical_idx >= 0 and best_technical_idx < len(candidate_responses):
-        best_response = candidate_responses[best_technical_idx]["content"]
-    
+
+    # Get conversation context - handle both dict and LangChain messages
+    recent_exchanges = []
+    for msg in state["messages"][-6:]:
+        role = "AI" if is_assistant_message(msg) else "Candidate"
+        content = get_message_content(msg)
+        recent_exchanges.append(f"{role}: {content[:200]}...")
+
     messages = [
-        {"role": "system", "content": DEEP_DIVE_QUESTION_PROMPT},
-        {"role": "user", "content": f"""
+        {"role": "system", "content": DEEP_DIVE_PROMPT},
+        {
+            "role": "user",
+            "content": f"""
 Job Title: {state["job_context"]["title"]}
-Required Skills: {', '.join(state["job_context"].get("skills_required", []))}
+Required Skills: {", ".join(state["job_context"].get("skills_required", []))}
 
 Candidate's performance:
-- Technical average: {updates.get("avg_technical", state["avg_technical"]):.2f}
-- Depth average: {calculate_average(state["depth_scores"]):.2f}
-- Trend: {updates.get("confidence_trend", state["confidence_trend"])}
+- Technical score: {updates.get("avg_technical", state["avg_technical"]):.2f}
+- Depth score: {updates.get("avg_depth", state.get("avg_depth", 0.5)):.2f}
+- Confidence trend: {updates.get("confidence_trend", state["confidence_trend"])}
 
-Strongest response so far:
-{best_response[:500] if best_response else "N/A"}
+Recent conversation:
+{chr(10).join(recent_exchanges)}
 
-Last response:
-{state.get("last_response", "N/A")[:500]}
-
-Generate a deep-dive question that:
-1. Challenges the candidate on system design or architecture
-2. Probes deeper into a topic they showed strength in
-3. Tests edge case thinking and trade-off analysis
-4. Is at difficulty level 4-5
+Generate a deep dive question that:
+1. Builds on the candidate's previous responses
+2. Explores system design or architectural thinking
+3. Tests ability to handle ambiguity and trade-offs
+4. Requires synthesis of multiple concepts
 
 Output only the question.
-"""}
+""",
+        },
     ]
-    
-    next_question = await llm.generate(messages, temperature=0.5)
-    
-    new_message = {
-        "role": "assistant",
-        "content": next_question,
-        "timestamp": datetime.utcnow().isoformat(),
-        "evaluation": None,
-    }
-    
+
+    next_question = await llm.generate(messages, temperature=0.7)
+
+    # Create message using AIMessage
+    new_message = AIMessage(content=next_question)
+
     return {
         **updates,
         "current_question": next_question,
