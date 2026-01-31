@@ -1,13 +1,16 @@
 /**
  * Application Feedback View (HR)
  * 
- * Displays AI interview feedback for a candidate.
- * HR can accept or reject based on AI recommendation and scores.
+ * Enhanced Layout:
+ * - Left: Qualitative Behavioral Report
+ * - Right: Analytics & Decision Panel
  */
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { hrAPI } from '../api/apiClient';
+import BehavioralFeedbackReport from '../components/BehavioralFeedbackReport';
+import { ConfidenceLineChart, SkillsRadarChart, SignalDonutChart } from '../components/FeedbackCharts';
 
 function ApplicationFeedback() {
     const { applicationId } = useParams();
@@ -43,45 +46,15 @@ function ApplicationFeedback() {
         }
     };
 
-    const getRecommendationStyle = (rec) => {
-        const styles = {
-            strong_hire: { bg: 'rgba(16, 185, 129, 0.15)', color: '#10b981', label: 'Strong Hire' },
-            hire: { bg: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', label: 'Hire' },
-            maybe: { bg: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', label: 'Maybe' },
-            no_hire: { bg: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', label: 'No Hire' },
-        };
-        return styles[rec] || styles.maybe;
-    };
-
-    const renderScoreBar = (score, label) => (
-        <div style={{ marginBottom: 'var(--spacing-md)' }}>
-            <div className="flex justify-between mb-xs">
-                <span style={{ fontSize: '0.875rem' }}>{label}</span>
-                <span style={{ fontWeight: 600 }}>{Math.round(score * 100)}%</span>
-            </div>
-            <div style={{
-                height: '8px',
-                background: 'var(--color-bg-tertiary)',
-                borderRadius: '4px',
-                overflow: 'hidden',
-            }}>
-                <div style={{
-                    height: '100%',
-                    width: `${score * 100}%`,
-                    background: score >= 0.7 ? 'var(--color-success)' : score >= 0.5 ? 'var(--color-warning)' : 'var(--color-error)',
-                    borderRadius: '4px',
-                    transition: 'width 0.5s ease',
-                }} />
-            </div>
-        </div>
-    );
-
     if (loading) {
         return (
-            <div className="page">
-                <div className="container flex justify-center">
-                    <div className="loading-spinner"></div>
-                </div>
+            <div className="page" style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '60vh'
+            }}>
+                <div className="loading-spinner"></div>
             </div>
         );
     }
@@ -89,167 +62,501 @@ function ApplicationFeedback() {
     if (!application) {
         return (
             <div className="page">
-                <div className="container">
-                    <div className="card text-center">
-                        <h2>Application Not Found</h2>
-                        <Link to="/hr/applications" className="btn btn-primary mt-md">
-                            Back to Applications
-                        </Link>
-                    </div>
-                </div>
+                <div className="container">Application not found</div>
             </div>
         );
     }
 
-    const recStyle = getRecommendationStyle(application.ai_recommendation);
     const scores = application.interview_scores || {};
     const feedback = application.interview_feedback || {};
 
+    // Calculate overall score
+    const overallScore = Object.values(scores).length > 0
+        ? Object.values(scores).reduce((a, b) => a + b, 0) / Object.values(scores).length
+        : 0;
+
+    // Get status styling
+    const getStatusStyle = (status) => {
+        switch (status) {
+            case 'accepted':
+            case 'hired':
+                return {
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    color: 'white'
+                };
+            case 'rejected':
+                return {
+                    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                    color: 'white'
+                };
+            case 'interview_scheduled':
+                return {
+                    background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                    color: 'white'
+                };
+            default:
+                return {
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                    color: 'white'
+                };
+        }
+    };
+
     return (
         <div className="page animate-fade-in">
-            <div className="container" style={{ maxWidth: '900px' }}>
-                {/* Header */}
-                <div className="mb-lg">
-                    <Link to="/hr/applications" style={{ color: 'var(--color-text-muted)' }}>
-                        ← Back to Applications
-                    </Link>
-                </div>
-
-                <div className="card mb-lg" style={{
-                    background: 'var(--gradient-primary)',
-                    border: 'none',
-                    color: 'white',
+            <div className="container" style={{ maxWidth: '1400px' }}>
+                {/* Header Section */}
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    marginBottom: 'var(--spacing-xl)',
+                    gap: 'var(--spacing-lg)'
                 }}>
-                    <h1 style={{ color: 'white', margin: 0, marginBottom: 'var(--spacing-sm)' }}>
-                        AI Interview Feedback
-                    </h1>
-                    <p style={{ margin: 0, opacity: 0.9 }}>
-                        Candidate: {application.candidate_name || 'Unknown'} • {application.job_title || 'Position'}
-                    </p>
+                    <div>
+                        <Link
+                            to="/hr/applications"
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 'var(--spacing-xs)',
+                                fontSize: '0.875rem',
+                                color: 'var(--color-text-secondary)',
+                                marginBottom: 'var(--spacing-sm)',
+                                fontWeight: 500
+                            }}
+                        >
+                            ← Back to Applications
+                        </Link>
+                        <h1 style={{
+                            fontSize: '2rem',
+                            fontWeight: 700,
+                            marginBottom: 'var(--spacing-xs)',
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            backgroundClip: 'text'
+                        }}>
+                            {application.candidate_name}
+                        </h1>
+                        <p style={{
+                            color: 'var(--color-text-secondary)',
+                            fontSize: '0.875rem'
+                        }}>
+                            {application.job_title} • Interview Analysis
+                        </p>
+                    </div>
+
+                    {/* Status Badge */}
+                    <div style={{
+                        padding: 'var(--spacing-sm) var(--spacing-lg)',
+                        borderRadius: '50px',
+                        fontWeight: 700,
+                        fontSize: '0.875rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        ...getStatusStyle(application.status)
+                    }}>
+                        {application.status.replace('_', ' ')}
+                    </div>
                 </div>
 
-                <div className="grid" style={{ gridTemplateColumns: '2fr 1fr', gap: 'var(--spacing-lg)' }}>
-                    {/* Main Content */}
-                    <div>
-                        {/* AI Recommendation Badge */}
-                        <div className="card mb-lg text-center" style={{
-                            background: recStyle.bg,
-                            borderColor: recStyle.color,
-                        }}>
-                            <div style={{
-                                fontSize: '1.5rem',
-                                fontWeight: 700,
-                                color: recStyle.color,
-                            }}>
-                                {recStyle.label}
+                {/* Overall Performance Banner */}
+                <div className="card" style={{
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    color: 'white',
+                    marginBottom: 'var(--spacing-xl)',
+                    padding: 'var(--spacing-xl)'
+                }}>
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                        gap: 'var(--spacing-lg)',
+                        alignItems: 'center'
+                    }}>
+                        <div>
+                            <div style={{ fontSize: '0.75rem', opacity: 0.9, marginBottom: 'var(--spacing-xs)' }}>
+                                Overall Score
                             </div>
-                            <p style={{ margin: 'var(--spacing-sm) 0 0', color: 'var(--color-text-secondary)' }}>
-                                AI Recommendation
-                            </p>
+                            <div style={{ fontSize: '3rem', fontWeight: 700 }}>
+                                {Math.round(overallScore * 100)}
+                                <span style={{ fontSize: '1.5rem', opacity: 0.7 }}>/100</span>
+                            </div>
                         </div>
-
-                        {/* Scores */}
-                        <div className="card mb-lg">
-                            <h3>Performance Scores</h3>
-                            {renderScoreBar(scores.confidence || 0.5, 'Confidence')}
-                            {renderScoreBar(scores.technical || 0.5, 'Technical')}
-                            {renderScoreBar(scores.clarity || 0.5, 'Clarity')}
-                            {renderScoreBar(scores.depth || 0.5, 'Depth')}
+                        <div>
+                            <div style={{ fontSize: '0.75rem', opacity: 0.9, marginBottom: 'var(--spacing-xs)' }}>
+                                Recommendation
+                            </div>
+                            <div style={{ fontSize: '1.25rem', fontWeight: 600 }}>
+                                {overallScore >= 0.75 ? 'Strong Hire' :
+                                    overallScore >= 0.6 ? 'Consider' :
+                                        overallScore >= 0.4 ? 'Borderline' : 'Not Recommended'}
+                            </div>
                         </div>
+                        <div>
+                            <div style={{ fontSize: '0.75rem', opacity: 0.9, marginBottom: 'var(--spacing-xs)' }}>
+                                Interview Date
+                            </div>
+                            <div style={{ fontSize: '1rem', fontWeight: 500 }}>
+                                {new Date(application.created_at).toLocaleDateString('en', {
+                                    month: 'long',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                        {/* Detailed Feedback */}
-                        <div className="card mb-lg">
-                            <h3>Detailed Feedback</h3>
-
-                            {feedback.strengths && (
-                                <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                                    <h4 style={{ color: 'var(--color-success)' }}>Strengths</h4>
-                                    <ul style={{ paddingLeft: 'var(--spacing-lg)' }}>
-                                        {feedback.strengths.map((s, i) => <li key={i}>{s}</li>)}
-                                    </ul>
-                                </div>
-                            )}
-
-                            {feedback.areas_for_improvement && (
-                                <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-                                    <h4 style={{ color: 'var(--color-warning)' }}>Areas for Improvement</h4>
-                                    <ul style={{ paddingLeft: 'var(--spacing-lg)' }}>
-                                        {feedback.areas_for_improvement.map((a, i) => <li key={i}>{a}</li>)}
-                                    </ul>
-                                </div>
-                            )}
-
-                            {feedback.summary && (
+                {/* Main Content Grid */}
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 450px',
+                    gap: 'var(--spacing-lg)',
+                    alignItems: 'start'
+                }}>
+                    {/* LEFT COLUMN: Behavioral Report */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
+                        {feedback && Object.keys(feedback).length > 0 ? (
+                            <BehavioralFeedbackReport feedback={feedback} />
+                        ) : (
+                            <div className="card text-center" style={{
+                                padding: 'var(--spacing-2xl)',
+                                background: 'var(--color-bg-secondary)'
+                            }}>
                                 <div style={{
-                                    padding: 'var(--spacing-md)',
+                                    width: '80px',
+                                    height: '80px',
+                                    margin: '0 auto var(--spacing-lg)',
                                     background: 'var(--color-bg-tertiary)',
-                                    borderRadius: 'var(--radius-md)',
+                                    borderRadius: '50%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
                                 }}>
-                                    <strong>Summary:</strong> {feedback.summary}
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                        <polyline points="14 2 14 8 20 8" />
+                                        <line x1="16" y1="13" x2="8" y2="13" />
+                                        <line x1="16" y1="17" x2="8" y2="17" />
+                                        <polyline points="10 9 9 9 8 9" />
+                                    </svg>
                                 </div>
-                            )}
+                                <h3 style={{ marginBottom: 'var(--spacing-sm)' }}>No Feedback Available</h3>
+                                <p style={{ color: 'var(--color-text-secondary)' }}>
+                                    Qualitative feedback has not been generated yet.
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Detailed Score Breakdown */}
+                        <div className="card">
+                            <h3 style={{
+                                fontSize: '1.125rem',
+                                fontWeight: 600,
+                                marginBottom: 'var(--spacing-lg)',
+                                paddingBottom: 'var(--spacing-md)',
+                                borderBottom: '2px solid var(--color-border)'
+                            }}>
+                                Competency Assessment
+                            </h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
+                                <DetailedScoreCard
+                                    label="Technical Knowledge"
+                                    score={scores.technical || 0}
+                                    color="#3b82f6"
+                                    description="Understanding of core concepts and technologies"
+                                />
+                                <DetailedScoreCard
+                                    label="Communication Clarity"
+                                    score={scores.clarity || 0}
+                                    color="#8b5cf6"
+                                    description="Ability to articulate ideas clearly and effectively"
+                                />
+                                <DetailedScoreCard
+                                    label="Problem Solving"
+                                    score={scores.depth || 0}
+                                    color="#06b6d4"
+                                    description="Analytical thinking and solution approach"
+                                />
+                                <DetailedScoreCard
+                                    label="Confidence Level"
+                                    score={scores.confidence || 0}
+                                    color="#10b981"
+                                    description="Self-assurance and composure during interview"
+                                />
+                            </div>
                         </div>
                     </div>
 
-                    {/* Sidebar */}
-                    <div>
+                    {/* RIGHT COLUMN: Analytics & Actions */}
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 'var(--spacing-lg)',
+                        position: 'sticky',
+                        top: 'var(--spacing-lg)'
+                    }}>
                         {/* Decision Card */}
-                        <div className="card mb-lg">
-                            <h3>Your Decision</h3>
-
-                            {application.status === 'pending' || application.status === 'reviewing' ? (
-                                <div className="flex flex-col gap-sm">
-                                    <button
-                                        onClick={() => handleDecision('accepted')}
-                                        disabled={updating}
-                                        className="btn btn-success"
-                                        style={{ width: '100%' }}
-                                    >
-                                        Accept Candidate
-                                    </button>
-                                    <button
-                                        onClick={() => handleDecision('rejected')}
-                                        disabled={updating}
-                                        className="btn btn-error"
-                                        style={{ width: '100%' }}
-                                    >
-                                        Reject Candidate
-                                    </button>
-                                </div>
-                            ) : (
-                                <div style={{
-                                    padding: 'var(--spacing-md)',
-                                    background: application.status === 'accepted'
-                                        ? 'rgba(16, 185, 129, 0.1)'
-                                        : 'rgba(239, 68, 68, 0.1)',
-                                    borderRadius: 'var(--radius-md)',
-                                    textAlign: 'center',
-                                    fontWeight: 600,
-                                    color: application.status === 'accepted'
-                                        ? 'var(--color-success)'
-                                        : 'var(--color-error)',
-                                }}>
-                                    {application.status === 'accepted' ? 'Accepted' : 'Rejected'}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Interview Details */}
-                        <div className="card">
-                            <h4>Interview Details</h4>
-                            <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
-                                <p><strong>Questions Asked:</strong> {scores.questions_answered || 0}</p>
-                                <p><strong>Duration:</strong> ~{Math.round((scores.questions_answered || 5) * 2)} mins</p>
-                                <p><strong>Completed:</strong> {application.interview_completed_at
-                                    ? new Date(application.interview_completed_at).toLocaleDateString()
-                                    : 'N/A'}</p>
+                        <div className="card" style={{
+                            borderLeft: '4px solid #667eea'
+                        }}>
+                            <h3 style={{
+                                fontSize: '1.125rem',
+                                fontWeight: 600,
+                                marginBottom: 'var(--spacing-lg)'
+                            }}>
+                                Hiring Decision
+                            </h3>
+                            <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
+                                <button
+                                    onClick={() => handleDecision('accepted')}
+                                    disabled={updating || application.status === 'accepted'}
+                                    className="btn"
+                                    style={{
+                                        flex: 1,
+                                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                        color: 'white',
+                                        border: 'none',
+                                        fontWeight: 600,
+                                        opacity: application.status === 'accepted' ? 0.7 : 1
+                                    }}
+                                >
+                                    {application.status === 'accepted' ? '✓ Accepted' : 'Accept'}
+                                </button>
+                                <button
+                                    onClick={() => handleDecision('rejected')}
+                                    disabled={updating || application.status === 'rejected'}
+                                    className="btn"
+                                    style={{
+                                        flex: 1,
+                                        background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                                        color: 'white',
+                                        border: 'none',
+                                        fontWeight: 600,
+                                        opacity: application.status === 'rejected' ? 0.7 : 1
+                                    }}
+                                >
+                                    {application.status === 'rejected' ? '✗ Rejected' : 'Reject'}
+                                </button>
                             </div>
                         </div>
+
+                        {/* Visual Analytics */}
+                        <div className="card">
+                            <h3 style={{
+                                fontSize: '1.125rem',
+                                fontWeight: 600,
+                                marginBottom: 'var(--spacing-lg)'
+                            }}>
+                                Interview Analytics
+                            </h3>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xl)' }}>
+                                {/* Confidence Progression */}
+                                <div>
+                                    <h4 style={{
+                                        fontSize: '0.75rem',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.05em',
+                                        color: 'var(--color-text-secondary)',
+                                        marginBottom: 'var(--spacing-md)',
+                                        fontWeight: 600
+                                    }}>
+                                        Confidence Progression
+                                    </h4>
+                                    <ConfidenceLineChart data={feedback.confidence_trend} />
+                                </div>
+
+                                {/* Charts Grid */}
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: '1fr 1fr',
+                                    gap: 'var(--spacing-md)'
+                                }}>
+                                    <div>
+                                        <h4 style={{
+                                            fontSize: '0.75rem',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.05em',
+                                            color: 'var(--color-text-secondary)',
+                                            marginBottom: 'var(--spacing-md)',
+                                            textAlign: 'center',
+                                            fontWeight: 600
+                                        }}>
+                                            Skill Balance
+                                        </h4>
+                                        <SkillsRadarChart scores={scores} />
+                                    </div>
+                                    <div>
+                                        <h4 style={{
+                                            fontSize: '0.75rem',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.05em',
+                                            color: 'var(--color-text-secondary)',
+                                            marginBottom: 'var(--spacing-md)',
+                                            textAlign: 'center',
+                                            fontWeight: 600
+                                        }}>
+                                            Signal Type
+                                        </h4>
+                                        <SignalDonutChart />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Quick Stats */}
+                        <div className="card" style={{
+                            background: 'var(--color-bg-secondary)'
+                        }}>
+                            <h3 style={{
+                                fontSize: '0.875rem',
+                                fontWeight: 600,
+                                textTransform: 'uppercase',
+                                color: 'var(--color-text-secondary)',
+                                marginBottom: 'var(--spacing-md)',
+                                letterSpacing: '0.05em'
+                            }}>
+                                Quick Stats
+                            </h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
+                                <StatRow label="Technical Score" value={`${Math.round((scores.technical || 0) * 100)}%`} />
+                                <StatRow label="Communication" value={`${Math.round((scores.clarity || 0) * 100)}%`} />
+                                <StatRow label="Problem Solving" value={`${Math.round((scores.depth || 0) * 100)}%`} />
+                                <StatRow label="Confidence" value={`${Math.round((scores.confidence || 0) * 100)}%`} />
+                            </div>
+                        </div>
+
+                        {/* Contact Information */}
+                        {application.candidate_email && (
+                            <div className="card" style={{
+                                background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+                                borderLeft: '4px solid #3b82f6'
+                            }}>
+                                <h3 style={{
+                                    fontSize: '0.875rem',
+                                    fontWeight: 600,
+                                    textTransform: 'uppercase',
+                                    color: 'var(--color-text-secondary)',
+                                    marginBottom: 'var(--spacing-md)',
+                                    letterSpacing: '0.05em'
+                                }}>
+                                    Contact
+                                </h3>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                        <polyline points="22,6 12,13 2,6" />
+                                    </svg>
+                                    <a
+                                        href={`mailto:${application.candidate_email}`}
+                                        style={{
+                                            color: '#3b82f6',
+                                            textDecoration: 'none',
+                                            fontSize: '0.875rem'
+                                        }}
+                                    >
+                                        {application.candidate_email}
+                                    </a>
+                                </div>
+                                {application.resume_url && (
+                                    <a
+                                        href={application.resume_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="btn btn-secondary"
+                                        style={{
+                                            marginTop: 'var(--spacing-md)',
+                                            width: '100%',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: 'var(--spacing-xs)'
+                                        }}
+                                    >
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                            <polyline points="14 2 14 8 20 8" />
+                                        </svg>
+                                        View Resume
+                                    </a>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
         </div>
     );
 }
+
+// Helper Components
+const DetailedScoreCard = ({ label, score, color, description }) => (
+    <div style={{
+        padding: 'var(--spacing-md)',
+        background: 'var(--color-bg-secondary)',
+        borderRadius: 'var(--border-radius)',
+        border: '1px solid var(--color-border)',
+        transition: 'all 0.3s ease'
+    }}>
+        <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 'var(--spacing-sm)'
+        }}>
+            <div>
+                <div style={{ fontWeight: 600, marginBottom: '4px' }}>{label}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{description}</div>
+            </div>
+            <div style={{
+                fontSize: '1.5rem',
+                fontWeight: 700,
+                color: color
+            }}>
+                {Math.round(score * 100)}
+            </div>
+        </div>
+        <div style={{
+            height: '8px',
+            backgroundColor: 'var(--color-bg-tertiary)',
+            borderRadius: '4px',
+            overflow: 'hidden'
+        }}>
+            <div style={{
+                width: `${score * 100}%`,
+                height: '100%',
+                background: `linear-gradient(90deg, ${color}dd, ${color})`,
+                borderRadius: '4px',
+                transition: 'width 0.5s ease'
+            }} />
+        </div>
+    </div>
+);
+
+const StatRow = ({ label, value }) => (
+    <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 'var(--spacing-sm) 0',
+        borderBottom: '1px solid var(--color-border)'
+    }}>
+        <span style={{
+            fontSize: '0.875rem',
+            color: 'var(--color-text-secondary)'
+        }}>
+            {label}
+        </span>
+        <span style={{
+            fontSize: '0.875rem',
+            fontWeight: 600,
+            fontFamily: 'monospace'
+        }}>
+            {value}
+        </span>
+    </div>
+);
 
 export default ApplicationFeedback;

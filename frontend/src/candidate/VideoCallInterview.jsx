@@ -330,7 +330,7 @@ function VideoCallInterview() {
         }
 
         setTimeout(() => {
-            navigate(`/interviews/${interviewId}/feedback`);
+            navigate(`/interview/${interviewId}/feedback`);
         }, 3000);
     };
 
