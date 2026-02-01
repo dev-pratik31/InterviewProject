@@ -16,10 +16,12 @@ from app.utils.enums import CompanySize, JobStatus
 # Company Schemas
 # ============================================
 
+
 class CompanyCreateRequest(BaseModel):
     """
     Company creation request schema.
     """
+
     name: str = Field(..., min_length=2, max_length=200)
     industry: str = Field(..., min_length=2, max_length=100)
     size: CompanySize
@@ -34,6 +36,7 @@ class CompanyUpdateRequest(BaseModel):
     Company update request schema.
     All fields optional for partial updates.
     """
+
     name: Optional[str] = Field(None, min_length=2, max_length=200)
     industry: Optional[str] = Field(None, min_length=2, max_length=100)
     size: Optional[CompanySize] = None
@@ -47,6 +50,7 @@ class CompanyResponse(BaseModel):
     """
     Company response schema.
     """
+
     id: str
     name: str
     industry: str
@@ -62,29 +66,31 @@ class CompanyResponse(BaseModel):
 # Job Schemas
 # ============================================
 
+
 class JobCreateRequest(BaseModel):
     """
     Job creation request schema.
-    
+
     Phase 1: Manual job description input
     Phase 2: AI-generated descriptions via ai_service
     """
+
     title: str = Field(..., min_length=3, max_length=200)
     description: str = Field(..., min_length=50, max_length=10000)
     experience_required: int = Field(..., ge=0, le=30)
     skills_required: list[str] = Field(default_factory=list)
     education: Optional[str] = Field(None, max_length=200)
-    
+
     # Compensation
     salary_min: Optional[int] = Field(None, ge=0)
     salary_max: Optional[int] = Field(None, ge=0)
     salary_currency: str = Field(default="USD", max_length=3)
-    
+
     # Job details
     location: Optional[str] = Field(None, max_length=200)
     remote_type: str = Field(default="onsite")
     employment_type: str = Field(default="full-time")
-    
+
     # Initial status
     status: JobStatus = Field(default=JobStatus.DRAFT)
 
@@ -94,6 +100,7 @@ class JobUpdateRequest(BaseModel):
     Job update request schema.
     All fields optional for partial updates.
     """
+
     title: Optional[str] = Field(None, min_length=3, max_length=200)
     description: Optional[str] = Field(None, min_length=50, max_length=10000)
     experience_required: Optional[int] = Field(None, ge=0, le=30)
@@ -112,6 +119,7 @@ class JobResponse(BaseModel):
     """
     Job response schema for single job.
     """
+
     id: str
     title: str
     description: str
@@ -130,7 +138,7 @@ class JobResponse(BaseModel):
     applications_count: int
     created_at: datetime
     published_at: Optional[datetime] = None
-    
+
     # Populated in API
     company_name: Optional[str] = None
 
@@ -139,6 +147,7 @@ class JobListResponse(BaseModel):
     """
     Job list item response (lighter weight).
     """
+
     id: str
     title: str
     experience_required: int
@@ -148,16 +157,19 @@ class JobListResponse(BaseModel):
     status: JobStatus
     company_name: Optional[str] = None
     created_at: datetime
+    applications_count: int = 0
 
 
 # ============================================
 # Application Schemas
 # ============================================
 
+
 class ApplicationCreateRequest(BaseModel):
     """
     Job application request schema.
     """
+
     job_id: str = Field(..., description="Job to apply for")
     cover_letter: Optional[str] = Field(None, max_length=5000)
     resume_url: Optional[str] = None
@@ -167,6 +179,7 @@ class ApplicationResponse(BaseModel):
     """
     Application response schema.
     """
+
     id: str
     candidate_id: str
     job_id: str
@@ -174,7 +187,7 @@ class ApplicationResponse(BaseModel):
     resume_url: Optional[str] = None
     status: str
     created_at: datetime
-    
+
     # Populated fields
     job_title: Optional[str] = None
     company_name: Optional[str] = None

@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
-from app.api import jd_router, interview_router
+from app.api import jd_router, interview_router, resume_router
 from app.vectorstore import get_qdrant_manager
 
 
@@ -25,20 +25,20 @@ AUDIO_DIR.mkdir(parents=True, exist_ok=True)
 async def lifespan(app: FastAPI):
     """
     Application lifespan handler.
-    
+
     Startup:
     - Initialize Qdrant collections
     - Seed default questions if empty
-    
+
     Shutdown:
     - Close connections
     """
     # Startup
     print("🚀 Starting AI Interview Service...")
-    
+
     try:
         manager = get_qdrant_manager()
-        
+
         # Check Qdrant health
         is_healthy = await manager.health_check()
         if is_healthy:
@@ -46,14 +46,14 @@ async def lifespan(app: FastAPI):
             await manager.ensure_collections()
         else:
             print("⚠️ Qdrant not available - some features disabled")
-            
+
     except Exception as e:
         print(f"⚠️ Qdrant initialization failed: {e}")
-    
+
     print(f"🎯 AI Service ready on port {settings.ai_service_port}")
-    
+
     yield
-    
+
     # Shutdown
     print("🛑 Shutting down AI Service...")
     try:
@@ -99,6 +99,7 @@ app.add_middleware(
 # Include routers
 app.include_router(jd_router)
 app.include_router(interview_router)
+app.include_router(resume_router)
 
 # Mount static files for audio serving
 app.mount("/audio", StaticFiles(directory=str(AUDIO_DIR)), name="audio")
@@ -119,7 +120,7 @@ async def health_check():
     """Detailed health check."""
     manager = get_qdrant_manager()
     qdrant_ok = await manager.health_check()
-    
+
     return {
         "status": "healthy" if qdrant_ok else "degraded",
         "components": {
@@ -134,20 +135,17 @@ async def test_tts(text: str = "Hello, I am Aria, your AI interviewer."):
     """Test TTS synthesis."""
     try:
         from app.tts import generate_speech
-        
+
         print(f"Testing TTS with text: {text}")
         result = await generate_speech(text, session_id="test")
         print(f"TTS result: {result}")
-        
-        return {
-            "tts_available": True,
-            **result
-        }
+
+        return {"tts_available": True, **result}
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         return {
             "tts_available": False,
             "error": str(e),
         }
-

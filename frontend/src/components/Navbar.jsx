@@ -25,7 +25,7 @@ function Navbar() {
                     <div className="logo-icon">
                         <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
                             <rect width="32" height="32" rx="8" fill="url(#gradient)" />
-                            <text x="16" y="22" fontSize="18" fontWeight="bold" fill="white" textAnchor="middle">IP</text>
+                            <text x="16" y="22" fontSize="18" fontWeight="bold" fill="white" textAnchor="middle">HH</text>
                             <defs>
                                 <linearGradient id="gradient" x1="0" y1="0" x2="32" y2="32">
                                     <stop offset="0%" stopColor="#6366f1" />

@@ -1,8 +1,8 @@
 /**
- * JD Generator Styles
+ * JD Generator Styles - Enhanced Edition
  * 
- * Premium styling with smooth transitions, notepad appearance,
- * and typing cursor animation.
+ * Premium styling with improved visibility, smooth transitions, 
+ * modern notepad appearance, and typing cursor animation.
  */
 
 /* Main container */
@@ -111,7 +111,7 @@
 .jd-output-panel {
     flex: 1;
     padding: var(--spacing-xl);
-    background: var(--color-bg-secondary);
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     display: flex;
     align-items: flex-start;
     justify-content: center;
@@ -130,108 +130,161 @@
     }
 }
 
-/* Notepad Container */
+/* Notepad Container - Enhanced with better visibility */
 .notepad-container {
     width: 100%;
-    max-width: 700px;
-    background: #fffef8;
-    border-radius: var(--radius-lg);
+    max-width: 750px;
+    background: #ffffff;
+    border-radius: 12px;
     box-shadow:
-        0 4px 6px -1px rgba(0, 0, 0, 0.1),
-        0 2px 4px -1px rgba(0, 0, 0, 0.06),
-        inset 0 2px 4px rgba(255, 255, 255, 0.8);
-    border: 1px solid #e8e4d9;
+        0 20px 60px -10px rgba(0, 0, 0, 0.2),
+        0 10px 20px -5px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    border: 1px solid #d1d5db;
     overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.notepad-container:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 25px 70px -10px rgba(0, 0, 0, 0.25),
+        0 15px 25px -5px rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .notepad-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-sm) var(--spacing-md);
-    background: linear-gradient(180deg, #f5f3ed 0%, #ebe8e0 100%);
-    border-bottom: 1px solid #ddd9cc;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: linear-gradient(180deg, #f8f9fa 0%, #f1f3f5 100%);
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .notepad-title {
     font-size: 0.875rem;
-    font-weight: 600;
-    color: #666;
+    font-weight: 700;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .notepad-dots {
     display: flex;
-    gap: 6px;
+    gap: 8px;
 }
 
 .notepad-dots span {
-    width: 12px;
-    height: 12px;
+    width: 13px;
+    height: 13px;
     border-radius: 50%;
     background: #ddd;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.notepad-dots span:hover {
+    transform: scale(1.15);
 }
 
 .notepad-dots span:nth-child(1) {
-    background: #ff5f56;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+    box-shadow: 0 2px 4px rgba(255, 82, 82, 0.3);
 }
 
 .notepad-dots span:nth-child(2) {
-    background: #ffbd2e;
+    background: linear-gradient(135deg, #ffd93d 0%, #ffb700 100%);
+    box-shadow: 0 2px 4px rgba(255, 183, 0, 0.3);
 }
 
 .notepad-dots span:nth-child(3) {
-    background: #27c93f;
+    background: linear-gradient(135deg, #6bcf7f 0%, #4caf50 100%);
+    box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
 }
 
 .notepad-content {
-    padding: var(--spacing-xl);
-    min-height: 400px;
+    padding: var(--spacing-2xl);
+    min-height: 450px;
     max-height: calc(100vh - 280px);
     overflow-y: auto;
-    background:
-        linear-gradient(#fffef8 28px, #e8e4d9 29px);
-    background-size: 100% 30px;
+    background: #ffffff;
 }
 
-/* JD Text Styling */
+/* Custom scrollbar for notepad */
+.notepad-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.notepad-content::-webkit-scrollbar-track {
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.notepad-content::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.notepad-content::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+/* JD Text Styling - Enhanced visibility */
 .jd-text {
-    font-family: 'Georgia', serif;
-    font-size: 1rem;
-    line-height: 30px;
-    color: #333;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: #1f2937;
+    letter-spacing: 0.01em;
 }
 
 .jd-text p {
-    margin: 0;
-    min-height: 30px;
+    margin: 0 0 var(--spacing-md) 0;
+    min-height: 1.8em;
 }
 
 .jd-text .jd-heading {
     font-weight: 700;
-    color: var(--color-primary);
-    margin-top: 15px;
+    font-size: 1.2rem;
+    color: #111827;
+    margin-top: var(--spacing-xl);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-xs);
+    border-bottom: 2px solid #e5e7eb;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .jd-text .jd-heading:first-child {
     margin-top: 0;
 }
 
-/* Typing Cursor */
+/* Bullet points styling */
+.jd-text p:has(> :first-child:matches(•)) {
+    padding-left: var(--spacing-md);
+}
+
+/* Typing Cursor - Enhanced */
 .typing-cursor {
     display: inline-block;
-    font-weight: 400;
-    color: var(--color-primary);
-    animation: blink 0.7s infinite;
+    font-weight: 700;
+    color: #667eea;
+    margin-left: 2px;
+    animation: blink 0.8s infinite;
 }
 
 @keyframes blink {
 
     0%,
-    50% {
+    45% {
         opacity: 1;
     }
 
-    51%,
+    50%,
     100% {
         opacity: 0;
     }
@@ -242,19 +295,99 @@
     display: flex;
     gap: var(--spacing-md);
     justify-content: flex-end;
-    padding: var(--spacing-md) var(--spacing-xl);
-    background: #f5f3ed;
-    border-top: 1px solid #e8e4d9;
+    padding: var(--spacing-lg) var(--spacing-xl);
+    background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+    border-top: 1px solid #e5e7eb;
+}
+
+.notepad-actions .btn {
+    padding: var(--spacing-sm) var(--spacing-xl);
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.notepad-actions .btn:hover {
+    transform: translateY(-1px);
 }
 
 /* Form error */
 .form-error {
-    color: var(--color-error);
+    color: #dc2626;
     font-size: 0.875rem;
+    font-weight: 600;
     margin-bottom: var(--spacing-md);
-    padding: var(--spacing-sm);
-    background: rgba(239, 68, 68, 0.1);
+    padding: var(--spacing-md);
+    background: rgba(220, 38, 38, 0.1);
+    border-left: 3px solid #dc2626;
     border-radius: var(--radius-md);
+}
+
+/* Editable Textarea - Enhanced */
+.jd-textarea {
+    width: 100%;
+    height: 100%;
+    min-height: 450px;
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: #1f2937;
+    background: transparent;
+    padding: 0;
+    letter-spacing: 0.01em;
+}
+
+.jd-textarea:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+}
+
+.jd-textarea::placeholder {
+    color: #9ca3af;
+}
+
+/* Success Message */
+.post-success {
+    padding: var(--spacing-lg) var(--spacing-xl);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.08) 100%);
+    color: #047857;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-align: center;
+    border-top: 2px solid rgba(16, 185, 129, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+}
+
+.post-success::before {
+    content: "✓";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: #10b981;
+    color: white;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+/* Error Message in split view */
+.post-error {
+    padding: var(--spacing-md) var(--spacing-xl);
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-align: center;
+    border-top: 2px solid rgba(239, 68, 68, 0.3);
+    border-left: 3px solid #dc2626;
 }
 
 /* Responsive */
@@ -272,45 +405,83 @@
 
     .notepad-content {
         max-height: 50vh;
+        padding: var(--spacing-lg);
+    }
+
+    .jd-text {
+        font-size: 0.95rem;
+    }
+
+    .jd-text .jd-heading {
+        font-size: 1.1rem;
     }
 }
 
-/* Editable Textarea */
-.jd-textarea {
-    width: 100%;
-    height: 100%;
-    min-height: 400px;
-    border: none;
-    outline: none;
-    resize: none;
-    font-family: 'Georgia', serif;
-    font-size: 1rem;
-    line-height: 30px;
-    color: #333;
-    background: transparent;
-    padding: 0;
+/* Loading animation for generate button */
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
 }
 
-.jd-textarea:focus {
-    outline: none;
+.jd-generate-btn:disabled {
+    animation: pulse 1.5s ease-in-out infinite;
+    cursor: not-allowed;
 }
 
-/* Success Message */
-.post-success {
-    padding: var(--spacing-md) var(--spacing-xl);
-    background: rgba(16, 185, 129, 0.15);
-    color: var(--color-success);
-    font-weight: 600;
-    text-align: center;
-    border-top: 1px solid rgba(16, 185, 129, 0.3);
-}
+/* Dark mode support (if applicable) */
+@media (prefers-color-scheme: dark) {
+    .notepad-container {
+        background: #1f2937;
+        border-color: #374151;
+    }
 
-/* Error Message in split view */
-.post-error {
-    padding: var(--spacing-sm) var(--spacing-xl);
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--color-error);
-    font-size: 0.875rem;
-    text-align: center;
-    border-top: 1px solid rgba(239, 68, 68, 0.2);
+    .notepad-header {
+        background: linear-gradient(180deg, #374151 0%, #2d3748 100%);
+        border-bottom-color: #4b5563;
+    }
+
+    .notepad-title {
+        color: #e5e7eb;
+    }
+
+    .notepad-content {
+        background: #1f2937;
+    }
+
+    .jd-text {
+        color: #e5e7eb;
+    }
+
+    .jd-text .jd-heading {
+        color: #f3f4f6;
+        border-bottom-color: #4b5563;
+    }
+
+    .jd-textarea {
+        color: #e5e7eb;
+    }
+
+    .notepad-actions {
+        background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+        border-top-color: #374151;
+    }
+
+    .notepad-content::-webkit-scrollbar-track {
+        background: #374151;
+    }
+
+    .notepad-content::-webkit-scrollbar-thumb {
+        background: #4b5563;
+    }
+
+    .notepad-content::-webkit-scrollbar-thumb:hover {
+        background: #6b7280;
+    }
 }

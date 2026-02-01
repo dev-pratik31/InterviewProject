@@ -149,6 +149,23 @@ class AIServiceClient:
                 )
             return response.json()
 
+    async def screen_resume(
+        self,
+        job_description: str,
+        resume_text: str,
+    ) -> dict:
+        """Screen resume against job description."""
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            response = await client.post(
+                f"{self.base_url}/ai/resume/screen",
+                json={
+                    "job_description": job_description,
+                    "resume_text": resume_text,
+                },
+            )
+            response.raise_for_status()
+            return response.json()
+
 
 # Singleton
 _ai_client: Optional[AIServiceClient] = None

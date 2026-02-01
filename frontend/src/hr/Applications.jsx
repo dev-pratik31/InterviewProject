@@ -616,6 +616,17 @@ function Applications() {
                                             letterSpacing: '0.05em',
                                             color: 'var(--color-text-secondary)'
                                         }}>
+                                            Resume Score
+                                        </th>
+                                        <th style={{
+                                            padding: 'var(--spacing-md) var(--spacing-lg)',
+                                            textAlign: 'left',
+                                            fontSize: '0.75rem',
+                                            fontWeight: 700,
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.05em',
+                                            color: 'var(--color-text-secondary)'
+                                        }}>
                                             Status
                                         </th>
                                         <th style={{
@@ -712,6 +723,27 @@ function Applications() {
                                                     day: 'numeric',
                                                     year: 'numeric'
                                                 })}
+                                            </td>
+                                            <td style={{
+                                                padding: 'var(--spacing-lg)'
+                                            }}>
+                                                {app.resume_match_score ? (
+                                                    <div style={{
+                                                        display: 'inline-block',
+                                                        padding: '2px 8px',
+                                                        borderRadius: '4px',
+                                                        fontWeight: 700,
+                                                        fontSize: '0.875rem',
+                                                        background: app.resume_match_score >= 80 ? '#10b98120' :
+                                                            app.resume_match_score >= 60 ? '#f59e0b20' : '#ef444420',
+                                                        color: app.resume_match_score >= 80 ? '#10b981' :
+                                                            app.resume_match_score >= 60 ? '#f59e0b' : '#ef4444'
+                                                    }}>
+                                                        {app.resume_match_score}%
+                                                    </div>
+                                                ) : (
+                                                    <span style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>-</span>
+                                                )}
                                             </td>
                                             <td style={{
                                                 padding: 'var(--spacing-lg)'

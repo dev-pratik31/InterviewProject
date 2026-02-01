@@ -5,7 +5,11 @@ Endpoints for candidates to browse jobs, apply, and schedule interviews.
 All endpoints require Candidate role authentication.
 """
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status, File, UploadFile
+import os
+import shutil
+import uuid
+from typing import Dict
 
 from app.core.dependencies import CurrentCandidateUser
 from app.schemas.job import (
@@ -43,6 +47,7 @@ router = APIRouter(prefix="/candidate", tags=["Candidate"])
 # Job Browsing Endpoints
 # ============================================
 
+
 @router.get(
     "/jobs",
     summary="Browse job openings",
@@ -55,11 +60,11 @@ async def browse_jobs(
 ):
     """
     Browse published job openings.
-    
+
     Supports text search across job titles and descriptions.
     """
     jobs, total = await get_published_jobs(page, page_size, search)
-    
+
     job_list = []
     for job in jobs:
         company = await get_company_by_id(job["company_id"])
@@ -76,7 +81,7 @@ async def browse_jobs(
                 created_at=job["created_at"],
             )
         )
-    
+
     return pagination_response(
         data=[j.model_dump() for j in job_list],
         total=total,
@@ -93,22 +98,21 @@ async def browse_jobs(
 async def get_job_detail(job_id: str, current_user: CurrentCandidateUser):
     """
     Get detailed information about a job.
-    
+
     Increments view count for analytics.
     """
     job = await get_job_by_id(job_id)
-    
+
     if not job:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Job not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Job not found"
         )
-    
+
     # Increment views
     await increment_job_views(job_id)
-    
+
     company = await get_company_by_id(job["company_id"])
-    
+
     return JobResponse(
         id=str(job["_id"]),
         title=job["title"],
@@ -136,6 +140,47 @@ async def get_job_detail(job_id: str, current_user: CurrentCandidateUser):
 # Application Endpoints
 # ============================================
 
+
+@router.post(
+    "/upload-resume",
+    summary="Upload resume file",
+    response_model=Dict[str, str],
+)
+async def upload_resume(
+    file: UploadFile = File(...), current_user: CurrentCandidateUser = None
+):
+    """
+    Upload a resume file (PDF or DOCX).
+    Returns the file URL/path for use in application.
+    """
+    allowed_extensions = {".pdf", ".docx", ".doc"}
+    file_ext = os.path.splitext(file.filename)[1].lower()
+
+    if file_ext not in allowed_extensions:
+        raise HTTPException(
+            status_code=400, detail="Invalid file type. Only PDF and DOCX are allowed."
+        )
+
+    # Create uploads directory if not exists
+    upload_dir = "uploads"
+    os.makedirs(upload_dir, exist_ok=True)
+
+    # Generate unique filename
+    filename = f"{uuid.uuid4()}{file_ext}"
+    file_path = os.path.join(upload_dir, filename)
+
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        # Return absolute path or relative url depending on serving strategy
+        # For now, we return the path relative to backend root which is used by resume parser
+        return {"url": file_path}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
+
+
 @router.post(
     "/applications",
     response_model=ApplicationResponse,
@@ -143,24 +188,23 @@ async def get_job_detail(job_id: str, current_user: CurrentCandidateUser):
     summary="Apply to a job",
 )
 async def apply_to_job(
-    request: ApplicationCreateRequest,
-    current_user: CurrentCandidateUser
+    request: ApplicationCreateRequest, current_user: CurrentCandidateUser
 ):
     """
     Apply to a job opening.
-    
+
     Can only apply once per job.
     """
     try:
         application = await create_application(current_user["_id"], request)
-        
+
         job = await get_job_by_id(application["job_id"])
         company = await get_company_by_id(job["company_id"]) if job else None
-        
+
         return ApplicationResponse(
             id=str(application["_id"]),
-            candidate_id=application["candidate_id"],
-            job_id=application["job_id"],
+            candidate_id=str(application["candidate_id"]),
+            job_id=str(application["job_id"]),
             cover_letter=application.get("cover_letter"),
             resume_url=application.get("resume_url"),
             status=application["status"],
@@ -171,10 +215,7 @@ async def apply_to_job(
             candidate_email=current_user["email"],
         )
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.get(
@@ -190,17 +231,17 @@ async def get_my_applications(
     applications, total = await get_applications_by_candidate(
         current_user["_id"], page, page_size
     )
-    
+
     app_list = []
     for app in applications:
         job = await get_job_by_id(app["job_id"])
         company = await get_company_by_id(job["company_id"]) if job else None
-        
+
         app_list.append(
             ApplicationResponse(
                 id=str(app["_id"]),
-                candidate_id=app["candidate_id"],
-                job_id=app["job_id"],
+                candidate_id=str(app["candidate_id"]),
+                job_id=str(app["job_id"]),
                 cover_letter=app.get("cover_letter"),
                 resume_url=app.get("resume_url"),
                 status=app["status"],
@@ -211,7 +252,7 @@ async def get_my_applications(
                 candidate_email=current_user["email"],
             )
         )
-    
+
     return pagination_response(
         data=[a.model_dump() for a in app_list],
         total=total,
@@ -226,31 +267,29 @@ async def get_my_applications(
     summary="Get application details",
 )
 async def get_application_detail(
-    application_id: str,
-    current_user: CurrentCandidateUser
+    application_id: str, current_user: CurrentCandidateUser
 ):
     """Get details of a specific application."""
     application = await get_application_by_id(application_id)
-    
+
     if not application:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Application not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Application not found"
         )
-    
+
     if application["candidate_id"] != current_user["_id"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have access to this application"
+            detail="You don't have access to this application",
         )
-    
+
     job = await get_job_by_id(application["job_id"])
     company = await get_company_by_id(job["company_id"]) if job else None
-    
+
     return ApplicationResponse(
         id=str(application["_id"]),
-        candidate_id=application["candidate_id"],
-        job_id=application["job_id"],
+        candidate_id=str(application["candidate_id"]),
+        job_id=str(application["job_id"]),
         cover_letter=application.get("cover_letter"),
         resume_url=application.get("resume_url"),
         status=application["status"],
@@ -266,6 +305,7 @@ async def get_application_detail(
 # Interview Endpoints
 # ============================================
 
+
 @router.post(
     "/interviews",
     response_model=InterviewResponse,
@@ -273,25 +313,24 @@ async def get_application_detail(
     summary="Schedule an interview",
 )
 async def schedule_interview_slot(
-    request: InterviewScheduleRequest,
-    current_user: CurrentCandidateUser
+    request: InterviewScheduleRequest, current_user: CurrentCandidateUser
 ):
     """
     Schedule an interview for an application.
-    
+
     Can only schedule one interview per application.
     """
     try:
         interview = await schedule_interview(current_user["_id"], request)
-        
+
         job = await get_job_by_id(interview["job_id"])
         company = await get_company_by_id(job["company_id"]) if job else None
-        
+
         return InterviewResponse(
             id=str(interview["_id"]),
-            application_id=interview["application_id"],
-            candidate_id=interview["candidate_id"],
-            job_id=interview["job_id"],
+            application_id=str(interview["application_id"]),
+            candidate_id=str(interview["candidate_id"]),
+            job_id=str(interview["job_id"]),
             scheduled_time=interview["scheduled_time"],
             duration_minutes=interview["duration_minutes"],
             status=interview["status"],
@@ -304,10 +343,7 @@ async def schedule_interview_slot(
             candidate_email=current_user["email"],
         )
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.get(
@@ -323,12 +359,12 @@ async def get_my_interviews(
     interviews, total = await get_interviews_by_candidate(
         current_user["_id"], page, page_size
     )
-    
+
     interview_list = []
     for interview in interviews:
         job = await get_job_by_id(interview["job_id"])
         company = await get_company_by_id(job["company_id"]) if job else None
-        
+
         interview_list.append(
             InterviewListResponse(
                 id=str(interview["_id"]),
@@ -340,7 +376,7 @@ async def get_my_interviews(
                 candidate_name=current_user["full_name"],
             )
         )
-    
+
     return pagination_response(
         data=[i.model_dump() for i in interview_list],
         total=total,
@@ -354,33 +390,29 @@ async def get_my_interviews(
     response_model=InterviewResponse,
     summary="Get interview details",
 )
-async def get_interview_detail(
-    interview_id: str,
-    current_user: CurrentCandidateUser
-):
+async def get_interview_detail(interview_id: str, current_user: CurrentCandidateUser):
     """Get details of a specific interview."""
     interview = await get_interview_by_id(interview_id)
-    
+
     if not interview:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Interview not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Interview not found"
         )
-    
+
     if interview["candidate_id"] != current_user["_id"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have access to this interview"
+            detail="You don't have access to this interview",
         )
-    
+
     job = await get_job_by_id(interview["job_id"])
     company = await get_company_by_id(job["company_id"]) if job else None
-    
+
     return InterviewResponse(
         id=str(interview["_id"]),
-        application_id=interview["application_id"],
-        candidate_id=interview["candidate_id"],
-        job_id=interview["job_id"],
+        application_id=str(interview["application_id"]),
+        candidate_id=str(interview["candidate_id"]),
+        job_id=str(interview["job_id"]),
         scheduled_time=interview["scheduled_time"],
         duration_minutes=interview["duration_minutes"],
         status=interview["status"],

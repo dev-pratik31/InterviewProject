@@ -7,14 +7,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { candidateAPI } from '../api/apiClient';
+import ResumeUpload from './ResumeUpload';
 
 function ScheduleInterviewModal({ isOpen, onClose, job, onScheduled }) {
     const navigate = useNavigate();
-    const [mode, setMode] = useState('choose');
+    const [mode, setMode] = useState('upload'); // Start with upload
     const [scheduleDate, setScheduleDate] = useState('');
     const [scheduleTime, setScheduleTime] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [resumeUrl, setResumeUrl] = useState('');
 
     if (!isOpen) return null;
 
@@ -25,6 +27,7 @@ function ScheduleInterviewModal({ isOpen, onClose, job, onScheduled }) {
         try {
             await candidateAPI.applyToJob(job.id, {
                 cover_letter: '',
+                resume_url: resumeUrl,
                 interview_type: 'now',
             });
 
@@ -52,6 +55,7 @@ function ScheduleInterviewModal({ isOpen, onClose, job, onScheduled }) {
         try {
             await candidateAPI.applyToJob(job.id, {
                 cover_letter: '',
+                resume_url: resumeUrl,
                 interview_type: 'scheduled',
                 interview_scheduled_at: scheduledAt.toISOString(),
             });
@@ -214,6 +218,20 @@ function ScheduleInterviewModal({ isOpen, onClose, job, onScheduled }) {
                         {error}
                     </div>
                 )}
+
+                {/* Resume Upload Mode */}
+                {mode === 'upload' && (
+                    <div className="animate-fade-in">
+                        <h3 style={{ marginTop: 0, marginBottom: 'var(--spacing-md)' }}>
+                            Step 1: Upload Resume
+                        </h3>
+                        <ResumeUpload onUploadComplete={(url) => {
+                            setResumeUrl(url);
+                            setMode('choose');
+                        }} />
+                    </div>
+                )}
+
 
                 {/* Choose Mode */}
                 {mode === 'choose' && (

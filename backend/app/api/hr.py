@@ -51,6 +51,7 @@ router = APIRouter(prefix="/hr", tags=["HR"])
 # Company Endpoints
 # ============================================
 
+
 @router.post(
     "/company",
     response_model=CompanyResponse,
@@ -58,12 +59,11 @@ router = APIRouter(prefix="/hr", tags=["HR"])
     summary="Create company profile",
 )
 async def create_company_profile(
-    request: CompanyCreateRequest,
-    current_user: CurrentHRUser
+    request: CompanyCreateRequest, current_user: CurrentHRUser
 ):
     """
     Create a company profile for the HR user.
-    
+
     Each HR user can only have one company.
     """
     try:
@@ -80,10 +80,7 @@ async def create_company_profile(
             created_at=company["created_at"],
         )
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.get(
@@ -94,13 +91,13 @@ async def create_company_profile(
 async def get_my_company(current_user: CurrentHRUser):
     """Get the current HR user's company profile."""
     company = await get_company_by_hr(current_user["_id"])
-    
+
     if not company:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Company profile not found. Create one first."
+            detail="Company profile not found. Create one first.",
         )
-    
+
     return CompanyResponse(
         id=str(company["_id"]),
         name=company["name"],
@@ -120,20 +117,18 @@ async def get_my_company(current_user: CurrentHRUser):
     summary="Update company profile",
 )
 async def update_company_profile(
-    request: CompanyUpdateRequest,
-    current_user: CurrentHRUser
+    request: CompanyUpdateRequest, current_user: CurrentHRUser
 ):
     """Update the HR user's company profile."""
     company = await get_company_by_hr(current_user["_id"])
-    
+
     if not company:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Company profile not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Company profile not found"
         )
-    
+
     updated = await update_company(str(company["_id"]), request)
-    
+
     return CompanyResponse(
         id=str(updated["_id"]),
         name=updated["name"],
@@ -151,33 +146,31 @@ async def update_company_profile(
 # Job Endpoints
 # ============================================
 
+
 @router.post(
     "/jobs",
     response_model=JobResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create a job posting",
 )
-async def create_job_posting(
-    request: JobCreateRequest,
-    current_user: CurrentHRUser
-):
+async def create_job_posting(request: JobCreateRequest, current_user: CurrentHRUser):
     """
     Create a new job posting.
-    
+
     Requires a company profile to be set up first.
     """
     company_id = current_user.get("company_id")
-    
+
     if not company_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Create a company profile first"
+            detail="Create a company profile first",
         )
-    
+
     company = await get_company_by_id(company_id)
-    
+
     job = await create_job(current_user["_id"], company_id, request)
-    
+
     return JobResponse(
         id=str(job["_id"]),
         title=job["title"],
@@ -212,12 +205,12 @@ async def get_my_jobs(
 ):
     """Get all job postings created by the current HR user."""
     jobs, total = await get_jobs_by_hr(current_user["_id"], page, page_size)
-    
+
     # Get company name
     company_id = current_user.get("company_id")
     company = await get_company_by_id(company_id) if company_id else None
     company_name = company["name"] if company else None
-    
+
     job_list = [
         JobListResponse(
             id=str(job["_id"]),
@@ -229,10 +222,11 @@ async def get_my_jobs(
             status=job["status"],
             company_name=company_name,
             created_at=job["created_at"],
+            applications_count=job.get("applications_count", 0),
         )
         for job in jobs
     ]
-    
+
     return pagination_response(
         data=[j.model_dump() for j in job_list],
         total=total,
@@ -249,21 +243,20 @@ async def get_my_jobs(
 async def get_job_details(job_id: str, current_user: CurrentHRUser):
     """Get detailed information about a specific job."""
     job = await get_job_by_id(job_id)
-    
+
     if not job:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Job not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Job not found"
         )
-    
+
     if job["hr_id"] != current_user["_id"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have access to this job"
+            detail="You don't have access to this job",
         )
-    
+
     company = await get_company_by_id(job["company_id"])
-    
+
     return JobResponse(
         id=str(job["_id"]),
         title=job["title"],
@@ -293,28 +286,25 @@ async def get_job_details(job_id: str, current_user: CurrentHRUser):
     summary="Update job posting",
 )
 async def update_job_posting(
-    job_id: str,
-    request: JobUpdateRequest,
-    current_user: CurrentHRUser
+    job_id: str, request: JobUpdateRequest, current_user: CurrentHRUser
 ):
     """Update a job posting."""
     job = await get_job_by_id(job_id)
-    
+
     if not job:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Job not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Job not found"
         )
-    
+
     if job["hr_id"] != current_user["_id"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have access to this job"
+            detail="You don't have access to this job",
         )
-    
+
     updated = await update_job(job_id, request)
     company = await get_company_by_id(updated["company_id"])
-    
+
     return JobResponse(
         id=str(updated["_id"]),
         title=updated["title"],
@@ -342,6 +332,7 @@ async def update_job_posting(
 # Application Endpoints
 # ============================================
 
+
 @router.get(
     "/jobs/{job_id}/applications",
     summary="Get applications for a job",
@@ -355,32 +346,31 @@ async def get_job_applications(
     """Get all applications for a specific job."""
     # Verify job ownership
     job = await get_job_by_id(job_id)
-    
+
     if not job:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Job not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Job not found"
         )
-    
+
     if job["hr_id"] != current_user["_id"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have access to this job"
+            detail="You don't have access to this job",
         )
-    
+
     applications, total = await get_applications_by_job(job_id, page, page_size)
-    
+
     # Enrich with candidate and job info
     from app.services.auth_service import get_user_by_id
-    
+
     app_list = []
     for app in applications:
         candidate = await get_user_by_id(app["candidate_id"])
         app_list.append(
             ApplicationResponse(
                 id=str(app["_id"]),
-                candidate_id=app["candidate_id"],
-                job_id=app["job_id"],
+                candidate_id=str(app["candidate_id"]),
+                job_id=str(app["job_id"]),
                 cover_letter=app.get("cover_letter"),
                 resume_url=app.get("resume_url"),
                 status=app["status"],
@@ -390,7 +380,7 @@ async def get_job_applications(
                 candidate_email=candidate["email"] if candidate else None,
             )
         )
-    
+
     return pagination_response(
         data=[a.model_dump() for a in app_list],
         total=total,
@@ -409,29 +399,29 @@ async def get_single_application(
 ):
     """Get single application with full interview feedback for HR review."""
     application = await get_application_by_id(application_id)
-    
+
     if not application:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Application not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Application not found"
         )
-    
+
     # Verify job ownership
     job = await get_job_by_id(application["job_id"])
     if not job or job["hr_id"] != current_user["_id"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have access to this application"
+            detail="You don't have access to this application",
         )
-    
+
     # Get candidate info
     from app.services.auth_service import get_user_by_id
+
     candidate = await get_user_by_id(application["candidate_id"])
-    
+
     return {
         "id": str(application["_id"]),
-        "candidate_id": application["candidate_id"],
-        "job_id": application["job_id"],
+        "candidate_id": str(application["candidate_id"]),
+        "job_id": str(application["job_id"]),
         "cover_letter": application.get("cover_letter"),
         "resume_url": application.get("resume_url"),
         "status": application["status"],
@@ -439,11 +429,16 @@ async def get_single_application(
         "job_title": job["title"],
         "candidate_name": candidate["full_name"] if candidate else None,
         "candidate_email": candidate["email"] if candidate else None,
+        # Resume screening fields
+        "resume_screening_analysis": application.get("resume_screening_analysis"),
+        "resume_match_score": application.get("resume_match_score"),
         # Interview feedback fields
         "interview_type": application.get("interview_type"),
         "interview_scheduled_at": application.get("interview_scheduled_at"),
         "interview_status": application.get("interview_status"),
-        "interview_id": application.get("interview_id"),
+        "interview_id": str(application["interview_id"])
+        if application.get("interview_id")
+        else None,
         "interview_feedback": application.get("interview_feedback"),
         "ai_recommendation": application.get("ai_recommendation"),
         "interview_scores": application.get("interview_scores"),
@@ -463,29 +458,28 @@ async def update_app_status(
 ):
     """Update the status of an application (accept/reject)."""
     from pydantic import BaseModel
-    
+
     application = await get_application_by_id(application_id)
-    
+
     if not application:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Application not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Application not found"
         )
-    
+
     # Verify job ownership
     job = await get_job_by_id(application["job_id"])
     if not job or job["hr_id"] != current_user["_id"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have access to this application"
+            detail="You don't have access to this application",
         )
-    
+
     updated = await update_application_status(application_id, status, None)
-    
+
     return ApplicationResponse(
         id=str(updated["_id"]),
-        candidate_id=updated["candidate_id"],
-        job_id=updated["job_id"],
+        candidate_id=str(updated["candidate_id"]),
+        job_id=str(updated["job_id"]),
         cover_letter=updated.get("cover_letter"),
         resume_url=updated.get("resume_url"),
         status=updated["status"],
@@ -498,6 +492,7 @@ async def update_app_status(
 # Interview Endpoints
 # ============================================
 
+
 @router.get(
     "/interviews",
     summary="Get all interviews",
@@ -509,22 +504,22 @@ async def get_all_interviews(
 ):
     """Get all interviews for jobs managed by the current HR user."""
     interviews, total = await get_interviews_by_hr(current_user["_id"], page, page_size)
-    
+
     # Enrich with job and candidate info
     from app.services.auth_service import get_user_by_id
-    
+
     interview_list = []
     for interview in interviews:
         job = await get_job_by_id(interview["job_id"])
         candidate = await get_user_by_id(interview["candidate_id"])
         company = await get_company_by_id(job["company_id"]) if job else None
-        
+
         interview_list.append(
             InterviewResponse(
                 id=str(interview["_id"]),
-                application_id=interview["application_id"],
-                candidate_id=interview["candidate_id"],
-                job_id=interview["job_id"],
+                application_id=str(interview["application_id"]),
+                candidate_id=str(interview["candidate_id"]),
+                job_id=str(interview["job_id"]),
                 scheduled_time=interview["scheduled_time"],
                 duration_minutes=interview["duration_minutes"],
                 status=interview["status"],
@@ -537,7 +532,7 @@ async def get_all_interviews(
                 candidate_email=candidate["email"] if candidate else None,
             )
         )
-    
+
     return pagination_response(
         data=[i.model_dump() for i in interview_list],
         total=total,
@@ -558,32 +553,32 @@ async def update_interview_details(
 ):
     """Update interview details (reschedule, add notes, change status)."""
     interview = await get_interview_by_id(interview_id)
-    
+
     if not interview:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Interview not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Interview not found"
         )
-    
+
     # Verify job ownership
     job = await get_job_by_id(interview["job_id"])
     if not job or job["hr_id"] != current_user["_id"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have access to this interview"
+            detail="You don't have access to this interview",
         )
-    
+
     updated = await update_interview(interview_id, request)
-    
+
     from app.services.auth_service import get_user_by_id
+
     candidate = await get_user_by_id(updated["candidate_id"])
     company = await get_company_by_id(job["company_id"])
-    
+
     return InterviewResponse(
         id=str(updated["_id"]),
-        application_id=updated["application_id"],
-        candidate_id=updated["candidate_id"],
-        job_id=updated["job_id"],
+        application_id=str(updated["application_id"]),
+        candidate_id=str(updated["candidate_id"]),
+        job_id=str(updated["job_id"]),
         scheduled_time=updated["scheduled_time"],
         duration_minutes=updated["duration_minutes"],
         status=updated["status"],

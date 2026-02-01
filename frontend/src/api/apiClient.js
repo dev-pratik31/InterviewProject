@@ -93,6 +93,11 @@ export const candidateAPI = {
     browseJobs: (params) => apiClient.get('/candidate/jobs', { params }),
     getJob: (id) => apiClient.get(`/candidate/jobs/${id}`),
 
+    // Resume
+    uploadResume: (formData) => apiClient.post('/candidate/upload-resume', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
+
     // Applications
     applyToJob: (jobId, data) => apiClient.post('/candidate/applications', { job_id: jobId, ...data }),
     getMyApplications: (params) => apiClient.get('/candidate/applications', { params }),

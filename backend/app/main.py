@@ -13,6 +13,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+import os
+from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.database.mongodb import MongoDB
 from app.database.collections import create_indexes
@@ -23,7 +25,7 @@ from app.api import auth_router, hr_router, candidate_router, ai_router
 async def lifespan(app: FastAPI):
     """
     Application lifespan manager.
-    
+
     Handles startup and shutdown events:
     - Startup: Connect to MongoDB, create indexes
     - Shutdown: Close MongoDB connection
@@ -33,9 +35,9 @@ async def lifespan(app: FastAPI):
     await MongoDB.connect()
     await create_indexes()
     print("✓ Application ready")
-    
+
     yield
-    
+
     # Shutdown
     print("👋 Shutting down...")
     await MongoDB.disconnect()
@@ -88,6 +90,11 @@ app.include_router(hr_router, prefix=settings.API_V1_PREFIX)
 app.include_router(candidate_router, prefix=settings.API_V1_PREFIX)
 app.include_router(ai_router, prefix=settings.API_V1_PREFIX)
 
+# Static Files (Uploads)
+UPLOAD_DIR = os.path.join(os.getcwd(), "uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
 
 @app.get("/", tags=["Health"])
 async def root():
@@ -104,7 +111,7 @@ async def root():
 async def health_check():
     """
     Detailed health check.
-    
+
     Verifies MongoDB connection is active.
     """
     try:
@@ -114,7 +121,7 @@ async def health_check():
         db_status = "connected"
     except Exception as e:
         db_status = f"error: {str(e)}"
-    
+
     return {
         "status": "healthy" if db_status == "connected" else "degraded",
         "database": db_status,

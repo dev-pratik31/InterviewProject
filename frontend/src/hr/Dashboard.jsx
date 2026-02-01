@@ -28,6 +28,7 @@ function Dashboard() {
 
     const loadDashboardData = async () => {
         try {
+            // Fetch company info
             try {
                 const companyRes = await hrAPI.getCompany();
                 setCompany(companyRes.data);
@@ -35,15 +36,33 @@ function Dashboard() {
                 setCompany(null);
             }
 
+            // Fetch recent jobs
             const jobsRes = await hrAPI.getJobs({ page: 1, page_size: 5 });
             const jobs = jobsRes.data.data || [];
-            setRecentJobs(jobs);
 
-            const totalApps = jobs.reduce((sum, j) => sum + (j.applications_count || 0), 0);
+            // Fetch application counts for each job
+            const jobsWithCounts = await Promise.all(
+                jobs.map(async (job) => {
+                    try {
+                        const appsRes = await hrAPI.getApplications(job.id);
+                        return {
+                            ...job,
+                            applications_count: appsRes.data?.pagination?.total || 0
+                        };
+                    } catch (err) {
+                        return { ...job, applications_count: 0 };
+                    }
+                })
+            );
+
+            setRecentJobs(jobsWithCounts);
+
+            // Calculate total applications
+            const totalApps = jobsWithCounts.reduce((sum, j) => sum + (j.applications_count || 0), 0);
 
             setStats({
                 totalJobs: jobsRes.data.pagination?.total || 0,
-                publishedJobs: jobs.filter(j => j.status === 'published').length,
+                publishedJobs: jobsWithCounts.filter(j => j.status === 'published').length,
                 totalApplications: totalApps,
                 totalCandidates: Math.round(totalApps * 0.8)
             });
